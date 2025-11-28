@@ -1,47 +1,71 @@
-
 <style>
-  .bg-main-clr{
-    background:
-    #FBF6F3
+  .bg-main-clr {
+    background: #FBF6F3
   }
+
   /* Add brand color for all icons in the navigation bar */
   .navbar .nav-link i,
   .navbar .dropdown-item i,
   .navbar .shortcut-media i {
     color: #2E7D32 !important;
   }
+
+  /* Make icons white on mobile for better visibility */
+  @media (max-width: 1199px) {
+    .navbar .nav-link i {
+      color: #ffffff !important;
+    }
+
+    /* Make hamburger menu white on mobile */
+    .sidenav-toggler-line {
+      background: #ffffff !important;
+    }
+  }
+
   /* Modal styles */
   .custom-modal-backdrop {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 1040;
-    background: rgba(0,0,0,.3);
+    background: rgba(0, 0, 0, .3);
   }
+
   .custom-modal {
     display: none;
     position: fixed;
-    z-index: 3000; /* Increased z-index to ensure popup is on top */
-    left: 0; top: 0; right:0; bottom:0;
+    z-index: 3000;
+    /* Increased z-index to ensure popup is on top */
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
     width: 100vw;
     height: 100vh;
     overflow: auto;
     align-items: center;
     justify-content: center;
   }
+
   .custom-modal.active {
     display: flex !important;
   }
+
   .custom-modal-content {
     background: #fff;
     border-radius: .5rem;
-    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.2);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .2);
     max-width: 400px;
     width: 90%;
     margin: auto;
     padding: 2rem 1.5rem 1.5rem 1.5rem;
     position: relative;
-    z-index: 3100; /* Ensures content appears above backdrop */
+    z-index: 3100;
+    /* Ensures content appears above backdrop */
   }
+
   .custom-modal-close {
     position: absolute;
     top: 0.9rem;
@@ -54,7 +78,8 @@
 </style>
 
 <!-- Notification Modal -->
-<div id="notifModal" class="custom-modal" role="dialog" aria-modal="true" aria-labelledby="notifModalTitle" aria-hidden="true">
+<div id="notifModal" class="custom-modal" role="dialog" aria-modal="true" aria-labelledby="notifModalTitle"
+  aria-hidden="true">
   <div class="custom-modal-backdrop"></div>
   <div class="custom-modal-content">
     <span class="custom-modal-close" id="notifModalClose" aria-label="Close">&times;</span>
@@ -78,19 +103,20 @@
             <input class="form-control" placeholder="Search" type="text">
           </div> {% endcomment %}
         </div>
-        <button type="button" class="close" data-action="search-close" data-target="#navbar-search-main" aria-label="Close">
+        <button type="button" class="close" data-action="search-close" data-target="#navbar-search-main"
+          aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
       </form>
       <!-- Navbar links -->
       <ul class="navbar-nav align-items-center  ml-md-auto ">
-        <li class="nav-item d-xl-none" >
+        <li class="nav-item d-xl-none">
           <!-- Sidenav toggler -->
-          <div class="pr-3 sidenav-toggler sidenav-toggler-dark" data-action="sidenav-pin" data-target="#sidenav-main" >
+          <div class="pr-3 sidenav-toggler sidenav-toggler-dark" data-action="sidenav-pin" data-target="#sidenav-main">
             <div class="sidenav-toggler-inner">
-              <i class="sidenav-toggler-line" style="background:#2E7D32"></i>
-              <i class="sidenav-toggler-line" style="background:#2E7D32"></i>
-              <i class="sidenav-toggler-line" style="background:#2E7D32"></i>
+              <i class="sidenav-toggler-line" style="background:#ffffff"></i>
+              <i class="sidenav-toggler-line" style="background:#ffffff"></i>
+              <i class="sidenav-toggler-line" style="background:#ffffff"></i>
             </div>
           </div>
         </li>
@@ -103,17 +129,16 @@
           <a class="nav-link" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <i class="ni ni-bell-55"></i>
             {% if dashboard_notifications %}
-              <span class="badge badge-danger"
-                    style="position:absolute;top:10px;right:7px;font-size:10px;">
-                {{ notification_count }}
-              </span>
+            <span class="badge badge-danger" style="position:absolute;top:10px;right:7px;font-size:10px;">
+              {{ notification_count }}
+            </span>
             {% endif %}
           </a>
           <div class="dropdown-menu dropdown-menu-xl  dropdown-menu-right  py-0 overflow-hidden">
             <!-- Dropdown header -->
             <div class="px-3 py-3">
               <h6 class="text-sm text-muted m-0">
-                You have 
+                You have
                 <strong class="text-primary">
                   {{ notification_count }}
                 </strong>
@@ -123,94 +148,105 @@
             <!-- List group -->
             <div class="list-group list-group-flush" style="max-height: 320px; overflow-y: auto;">
               {% for notification in request.user.notifications.all|slice:":5" %}
-                <a href="javascript:void(0);"
-                   data-notif-id="{{ notification.id }}"
-                   data-notif-title="{{ notification.title|escapejs }}"
-                   data-notif-message="{{ notification.message|escapejs }}"
-                   data-notif-type="{{ notification.notification_type }}"
-                   data-notif-createdat="{{ notification.created_at|date:'Y-m-d H:i' }}"
-                   data-notif-isread="{{ notification.is_read|yesno:'1,0' }}"
-                   data-notif-orderurl="{% if notification.order %}{% url 'order_detail' notification.order.id %}{% else %}#{% endif %}"
-                   class="list-group-item list-group-item-action notification-item {% if not notification.is_read %}font-weight-bold{% endif %}">
-                  <div class="row align-items-center">
-                    <div class="col-auto position-relative">
-                      <!-- Avatar (can use user image if available, fallback to bell icon) -->
-                      {% if notification.notification_type == "order_placed" %}
-                        <span class="avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
-                              style="width:40px;height:40px;">
-                          <i class="ni ni-bag-17"></i>
-                        </span>
-                      {% elif notification.notification_type == "order_shipped" %}
-                        <span class="avatar rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" 
-                              style="width:40px;height:40px;">
-                          <i class="ni ni-delivery-fast"></i>
-                        </span>
-                      {% elif notification.notification_type == "order_delivered" %}
-                        <span class="avatar rounded-circle bg-success text-white d-flex align-items-center justify-content-center" 
-                              style="width:40px;height:40px;">
-                          <i class="ni ni-check-bold"></i>
-                        </span>
-                      {% elif notification.notification_type == "payment_success" %}
-                        <span class="avatar rounded-circle bg-success text-white d-flex align-items-center justify-content-center" 
-                              style="width:40px;height:40px;">
-                          <i class="ni ni-check-bold"></i>
-                        </span>
-                      {% elif notification.notification_type == "payment_failed" %}
-                        <span class="avatar rounded-circle bg-danger text-white d-flex align-items-center justify-content-center" 
-                              style="width:40px;height:40px;">
-                          <i class="ni ni-fat-remove"></i>
-                        </span>
-                      {% elif notification.notification_type == "promotion" %}
-                        <span class="avatar rounded-circle bg-info text-white d-flex align-items-center justify-content-center" 
-                              style="width:40px;height:40px;">
-                          <i class="ni ni-bulb-61"></i>
-                        </span>
-                      {% else %}
-                        <span class="avatar rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" 
-                              style="width:40px;height:40px;">
-                          <i class="ni ni-bell-55"></i>
-                        </span>
-                      {% endif %}
-                      {% if not notification.is_read == True %}
-                        <span style="position: absolute; top: 0; right: 0; width: 11px; height: 11px; background: #ff3b3c; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #c9c9c9;" class="unread-dot"></span>
-                      {% endif %}
-                    </div>
-                    <div class="col ml--2">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                          <h4 class="mb-0 text-sm">{{ notification.title|truncatechars:32 }}</h4>
-                        </div>
-                        <div class="text-right text-muted">
-                          <small>
-                            {% if notification.created_at %}
-                              {{ notification.created_at|timesince }} ago
-                            {% endif %}
-                          </small>
-                        </div>
-                      </div>
-                      <p class="text-sm mb-0">{{ notification.message|truncatechars:60 }}</p>
-                    </div>
+              <a href="javascript:void(0);" data-notif-id="{{ notification.id }}"
+                data-notif-title="{{ notification.title|escapejs }}"
+                data-notif-message="{{ notification.message|escapejs }}"
+                data-notif-type="{{ notification.notification_type }}"
+                data-notif-createdat="{{ notification.created_at|date:'Y-m-d H:i' }}"
+                data-notif-isread="{{ notification.is_read|yesno:'1,0' }}"
+                data-notif-orderurl="{% if notification.order %}{% url 'order_detail' notification.order.id %}{% else %}#{% endif %}"
+                class="list-group-item list-group-item-action notification-item {% if not notification.is_read %}font-weight-bold{% endif %}">
+                <div class="row align-items-center">
+                  <div class="col-auto position-relative">
+                    <!-- Avatar (can use user image if available, fallback to bell icon) -->
+                    {% if notification.notification_type == "order_placed" %}
+                    <span
+                      class="avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                      style="width:40px;height:40px;">
+                      <i class="ni ni-bag-17"></i>
+                    </span>
+                    {% elif notification.notification_type == "order_shipped" %}
+                    <span
+                      class="avatar rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
+                      style="width:40px;height:40px;">
+                      <i class="ni ni-delivery-fast"></i>
+                    </span>
+                    {% elif notification.notification_type == "order_delivered" %}
+                    <span
+                      class="avatar rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                      style="width:40px;height:40px;">
+                      <i class="ni ni-check-bold"></i>
+                    </span>
+                    {% elif notification.notification_type == "payment_success" %}
+                    <span
+                      class="avatar rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                      style="width:40px;height:40px;">
+                      <i class="ni ni-check-bold"></i>
+                    </span>
+                    {% elif notification.notification_type == "payment_failed" %}
+                    <span
+                      class="avatar rounded-circle bg-danger text-white d-flex align-items-center justify-content-center"
+                      style="width:40px;height:40px;">
+                      <i class="ni ni-fat-remove"></i>
+                    </span>
+                    {% elif notification.notification_type == "promotion" %}
+                    <span
+                      class="avatar rounded-circle bg-info text-white d-flex align-items-center justify-content-center"
+                      style="width:40px;height:40px;">
+                      <i class="ni ni-bulb-61"></i>
+                    </span>
+                    {% else %}
+                    <span
+                      class="avatar rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                      style="width:40px;height:40px;">
+                      <i class="ni ni-bell-55"></i>
+                    </span>
+                    {% endif %}
+                    {% if not notification.is_read == True %}
+                    <span
+                      style="position: absolute; top: 0; right: 0; width: 11px; height: 11px; background: #ff3b3c; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #c9c9c9;"
+                      class="unread-dot"></span>
+                    {% endif %}
                   </div>
-                </a>
-              {% empty %}
-                <div class="p-3 text-center text-muted small">
-                  No notifications.
+                  <div class="col ml--2">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h4 class="mb-0 text-sm">{{ notification.title|truncatechars:32 }}</h4>
+                      </div>
+                      <div class="text-right text-muted">
+                        <small>
+                          {% if notification.created_at %}
+                          {{ notification.created_at|timesince }} ago
+                          {% endif %}
+                        </small>
+                      </div>
+                    </div>
+                    <p class="text-sm mb-0">{{ notification.message|truncatechars:60 }}</p>
+                  </div>
                 </div>
+              </a>
+              {% empty %}
+              <div class="p-3 text-center text-muted small">
+                No notifications.
+              </div>
               {% endfor %}
             </div>
-            <a href="{% url 'notification_list' %}" class="dropdown-item text-center text-primary font-weight-bold py-3">View all</a>
+            <a href="{% url 'notification_list' %}"
+              class="dropdown-item text-center text-primary font-weight-bold py-3">View all</a>
           </div>
         </li>
       </ul>
       <ul class="navbar-nav align-items-center  ml-auto ml-md-0 ">
         <li class="nav-item dropdown">
-          <a class="nav-link pr-0" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a class="nav-link pr-0" href="#" role="button" data-toggle="dropdown" aria-haspopup="true"
+            aria-expanded="false">
             <div class="media align-items-center">
               <span class="avatar avatar-sm rounded-circle" style="overflow:hidden; display:inline-block;">
                 {% if request.user.avatar %}
-                  <img alt="Profile Photo" src="{{ request.user.avatar.url }}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                <img alt="Profile Photo" src="{{ request.user.avatar.url }}"
+                  style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                 {% else %}
-                  <img alt="Profile Photo"  style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                <img alt="Profile Photo" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                 {% endif %}
               </span>
               <div class="media-body  ml-2  d-none d-lg-block">
@@ -245,46 +281,46 @@
 </nav>
 
 <script>
-(function() {
-  // Modal logic
-  const modal = document.getElementById('notifModal');
-  const modalBody = document.getElementById('notifModalBody');
-  const modalAction = document.getElementById('notifModalAction');
-  const modalClose = document.getElementById('notifModalClose');
+  (function () {
+    // Modal logic
+    const modal = document.getElementById('notifModal');
+    const modalBody = document.getElementById('notifModalBody');
+    const modalAction = document.getElementById('notifModalAction');
+    const modalClose = document.getElementById('notifModalClose');
 
-  function closeModal() {
-    modal.classList.remove('active');
-    // Clear contents
-    modalBody.innerHTML = '';
-    modalAction.innerHTML = '';
-  }
+    function closeModal() {
+      modal.classList.remove('active');
+      // Clear contents
+      modalBody.innerHTML = '';
+      modalAction.innerHTML = '';
+    }
 
-  if(modalClose) {
-    modalClose.addEventListener('click', closeModal);
-  }
-  // Close modal if clicking on backdrop
-  if(modal) {
-    modal.addEventListener('click', function(e){
-      if(e.target === modal || e.target.classList.contains('custom-modal-backdrop')) closeModal();
-    });
-  }
+    if (modalClose) {
+      modalClose.addEventListener('click', closeModal);
+    }
+    // Close modal if clicking on backdrop
+    if (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal || e.target.classList.contains('custom-modal-backdrop')) closeModal();
+      });
+    }
 
-  // delegate click handler for all notification links
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.notification-item').forEach(function(link) {
-      link.addEventListener('click', function(event){
-        event.preventDefault();
+    // delegate click handler for all notification links
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.notification-item').forEach(function (link) {
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
 
-        // Gather info from data- attributes
-        var notifId = link.getAttribute('data-notif-id');
-        var title = link.getAttribute('data-notif-title');
-        var message = link.getAttribute('data-notif-message');
-        var notifType = link.getAttribute('data-notif-type');
-        var createdAt = link.getAttribute('data-notif-createdat');
-        var isRead = link.getAttribute('data-notif-isread') === "1";
-        var orderUrl = link.getAttribute('data-notif-orderurl');
-        // Show modal
-        modalBody.innerHTML = `
+          // Gather info from data- attributes
+          var notifId = link.getAttribute('data-notif-id');
+          var title = link.getAttribute('data-notif-title');
+          var message = link.getAttribute('data-notif-message');
+          var notifType = link.getAttribute('data-notif-type');
+          var createdAt = link.getAttribute('data-notif-createdat');
+          var isRead = link.getAttribute('data-notif-isread') === "1";
+          var orderUrl = link.getAttribute('data-notif-orderurl');
+          // Show modal
+          modalBody.innerHTML = `
           <div class="mb-3">
             <h4 class="mb-2">${title}</h4>
             <div class="text-muted small">${createdAt}</div>
@@ -297,53 +333,53 @@
           </div>
         `;
 
-        // Add 'View Order' action if order exists
-        if(orderUrl && orderUrl !== '#'){
-          modalAction.innerHTML = `<a href="${orderUrl}" class="btn btn-primary btn-sm mt-1">View Order</a>`;
-        } else {
-          modalAction.innerHTML = '';
-        }
+          // Add 'View Order' action if order exists
+          if (orderUrl && orderUrl !== '#') {
+            modalAction.innerHTML = `<a href="${orderUrl}" class="btn btn-primary btn-sm mt-1">View Order</a>`;
+          } else {
+            modalAction.innerHTML = '';
+          }
 
-        modal.classList.add('active');
+          modal.classList.add('active');
 
-        // Mark as read (AJAX) if not already
-        if (!isRead) {
-          fetch('/notifications/mark-as-read/' + notifId + '/', {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': getCsrfToken(),
-              'Content-Type': 'application/json'
-            }
-          }).then(function(resp){
-            if(resp.ok){
-              // Remove bold style
-              link.classList.remove('font-weight-bold');
-              link.setAttribute('data-notif-isread', "1");
-              // Optionally update notification badge/count
-              const badge = document.querySelector('.ni-bell-55 + .badge');
-              if(badge && parseInt(badge.innerText) > 0)
-                badge.innerText = parseInt(badge.innerText) - 1;
-            }
-          });
-        }
+          // Mark as read (AJAX) if not already
+          if (!isRead) {
+            fetch('/notifications/mark-as-read/' + notifId + '/', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+              }
+            }).then(function (resp) {
+              if (resp.ok) {
+                // Remove bold style
+                link.classList.remove('font-weight-bold');
+                link.setAttribute('data-notif-isread', "1");
+                // Optionally update notification badge/count
+                const badge = document.querySelector('.ni-bell-55 + .badge');
+                if (badge && parseInt(badge.innerText) > 0)
+                  badge.innerText = parseInt(badge.innerText) - 1;
+              }
+            });
+          }
+        });
       });
     });
-  });
 
-  // CSRF
-  function getCsrfToken() {
-    let cookieValue = null, name = 'csrftoken';
-    if (document.cookie && document.cookie !== '') {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+    // CSRF
+    function getCsrfToken() {
+      let cookieValue = null, name = 'csrftoken';
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
       }
+      return cookieValue;
     }
-    return cookieValue;
-  }
-})();
+  })();
 </script>
