@@ -85,6 +85,7 @@
             <thead class="thead-light">
               <tr>
                 <th scope="col">#</th>
+                <th scope="col">Icon</th>
                 <th scope="col">Category Name</th>
                 <th scope="col">Actions</th>
               </tr>
@@ -93,6 +94,13 @@
               {% for category in categories %}
               <tr>
                 <td>{{ forloop.counter0|add:categories.start_index }}</td>
+                <td>
+                  {% if category.icon %}
+                    <img src="{{ category.icon.url }}" alt="{{ category.category_name }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                  {% else %}
+                    <i class="fas fa-image text-muted" style="font-size: 24px;"></i>
+                  {% endif %}
+                </td>
                 <td>{{ category.category_name }}</td>
                 <td class="action-btns">
                   <!-- Edit button triggers unique modal for each category -->
@@ -120,7 +128,7 @@
               <div class="modal fade" id="editCategoryModal-{{ category.id }}" tabindex="-1" aria-labelledby="editCategoryModalLabel-{{ category.id }}" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document">
                   <div class="modal-content">
-                    <form method="post" action="{% url 'category_edit' category.id %}" class="needs-validation" novalidate>
+                    <form method="post" action="{% url 'category_edit' category.id %}" enctype="multipart/form-data" class="needs-validation" novalidate>
                       {% csrf_token %}
                       <div class="modal-header justify-content-center" style="background: #C8E6C9;">
                         <h6 class="modal-title w-100 text-center mb-0" id="editCategoryModalLabel-{{ category.id }}">Edit Category</h6>
@@ -141,6 +149,21 @@
                           <div class="invalid-feedback">
                             Please provide a category name.
                           </div>
+                        </div>
+                        <div class="form-group mb-3">
+                          <label for="edit_category_icon_modal_{{ category.id }}">Category Icon</label>
+                          {% if category.icon %}
+                            <div class="mb-2">
+                              <img src="{{ category.icon.url }}" alt="Current icon" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                              <small class="d-block text-muted">Current icon</small>
+                            </div>
+                          {% endif %}
+                          <input type="file"
+                                 class="form-control"
+                                 id="edit_category_icon_modal_{{ category.id }}"
+                                 name="icon"
+                                 accept="image/*">
+                          <small class="form-text text-muted">Upload a new icon (optional)</small>
                         </div>
                       </div>
                       <div class="modal-footer">
@@ -175,7 +198,7 @@
               </div>
               {% empty %}
               <tr>
-                <td colspan="4" class="text-center text-muted">No data found.</td>
+                <td colspan="5" class="text-center text-muted">No data found.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -227,7 +250,7 @@
 <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <form method="post" action="{% url 'add_product_category' %}" class="needs-validation" novalidate>
+      <form method="post" action="{% url 'add_product_category' %}" enctype="multipart/form-data" class="needs-validation" novalidate>
         {% csrf_token %}
         <div class="modal-header justify-content-center" style="background: #C8E6C9;">
           <h6 class="modal-title w-100 text-center mb-0" id="addCategoryModalLabel">Add New Category</h6>
@@ -242,6 +265,11 @@
             <div class="invalid-feedback">
               Please provide a category name.
             </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="category_icon_modal">Category Icon</label>
+            <input type="file" class="form-control" id="category_icon_modal" name="icon" accept="image/*">
+            <small class="form-text text-muted">Upload an icon for this category (optional)</small>
           </div>
         </div>
         <div class="modal-footer">

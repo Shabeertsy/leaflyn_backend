@@ -49,6 +49,7 @@ class ShippingAddress(BaseModel):
 
 class Categories(BaseModel):
     category_name = models.CharField(max_length=255, db_index=True, verbose_name="Category Name")
+    icon = models.ImageField(upload_to='category_icons/', blank=True, null=True, verbose_name="Category Icon")
     
     class Meta:
         indexes = [

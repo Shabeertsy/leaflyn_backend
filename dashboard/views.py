@@ -365,7 +365,7 @@ class ProductCategoryView(PaginationSearchMixin, View):
 # Django form for category
 class CategoryCreateView(View):
     def post(self, request):
-        form = CategoriesForm(request.POST)
+        form = CategoriesForm(request.POST, request.FILES)
         if form.is_valid():
             category_name = form.cleaned_data.get('category_name')
             if Categories.objects.filter(category_name__iexact=category_name).exists():
@@ -382,7 +382,7 @@ class CategoryCreateView(View):
 class CategoryEditView(View):
     def post(self, request, pk):
         category = get_object_or_404(Categories, pk=pk)
-        form = CategoriesForm(request.POST, instance=category)
+        form = CategoriesForm(request.POST, request.FILES, instance=category)
         if form.is_valid():
             category_name = form.cleaned_data.get('category_name')
             if Categories.objects.filter(category_name__iexact=category_name).exclude(pk=pk).exists():

@@ -15,9 +15,9 @@ class CustomPageNumberPagination(PageNumberPagination):
 
 
 class CategoryListAPIView(APIView):
-    def get(self, request):
+    def get(self, request): 
         try:
-            categories = Category.objects.all()
+            categories = Categories.objects.all()
             serializer = CategorySerializer(categories, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:

@@ -8,6 +8,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = [
             'uuid',
             'category_name',
+            'icon',
             'created_at',
             'updated_at',
         ]

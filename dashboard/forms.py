@@ -7,7 +7,7 @@ from user.models import Categories, Colors, Coupon, Product, ProductVariant, Siz
 class CategoriesForm(forms.ModelForm):
     class Meta:
         model = Categories
-        fields = ['category_name']
+        fields = ['category_name', 'icon']
 
 
 class SizeForm(forms.ModelForm):

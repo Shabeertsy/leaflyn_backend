@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-%jo%_(otet%)*#5p+wz3!w^o=_*s3b8fu$u7*$4@x#utt!cgqw
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['16.171.4.2', 'crdrops.xyz', 'www.crdrops.xyz','127.0.0.1','backend.crdrops.xyz','192.168.1.13']
+ALLOWED_HOSTS = ['16.171.4.2', 'crdrops.xyz', 'www.crdrops.xyz','127.0.0.1','backend.crdrops.xyz','192.168.1.13','localhost']
 
 
 # Application definition
