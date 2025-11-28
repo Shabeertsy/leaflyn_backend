@@ -1,0 +1,376 @@
+
+
+{% block stylesheets %}
+<style>
+  /* General sidenav styles */
+  .sidenav {
+    background: #fff;
+    border-right: 1px solid #e5e7eb; /* subtle border */
+    padding-top: 12px;
+  }
+
+  /* Section titles */
+  .sidenav h6.navbar-heading {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9ca3af; /* gray-400 */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 16px 0 8px 12px;
+  }
+
+  /* Nav items */
+  .sidenav .nav-item {
+    margin: 2px 6px;
+  }
+  .sidenav .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2E7D32; /* brand color */
+    transition: all 0.2s ease;
+  }
+  .sidenav .nav-link i {
+    margin-right: 10px;
+    font-size: 16px;
+    color: #2E7D32; /* brand color for icon */
+    transition: color 0.2s;
+  }
+
+  /* Brand/logo in sidenav */
+  .sidenav .navbar-brand,
+  .sidenav .brand-text {
+    color: #2E7D32 !important;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  /* Hover & focus */
+  .sidenav .nav-link:hover, .sidenav .nav-link:focus {
+    background-color: #f3f4f6; /* gray-100 */
+    color: #2E7D32 !important; /* brand color */
+    font-weight: 600;
+  }
+  .sidenav .nav-link:hover i,
+  .sidenav .nav-link:focus i {
+    color: #2E7D32 !important;
+  }
+
+  /* Active link */
+  .sidenav .nav-link.active {
+    background-color: #e0f2fe; /* sky-100 */
+    color: #2E7D32 !important; /* brand color */
+    font-weight: 600;
+  }
+  .sidenav .nav-link.active i {
+    color: #2E7D32 !important;
+  }
+
+  /* Mobile close button */
+  #sidenavCloseBtn {
+    display: none;
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 1051;
+    background: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  #sidenavCloseBtn:hover, #sidenavCloseBtn:focus {
+    background: #f6f9fc;
+    box-shadow: 0 4px 16px rgba(44,62,80,0.12);
+  }
+  #sidenavCloseBtn .close-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    margin: 0 auto;
+    position: relative;
+  }
+  #sidenavCloseBtn .close-icon:before, 
+  #sidenavCloseBtn .close-icon:after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    width: 2px;
+    height: 18px;
+    background: #2E7D32; /* brand color for close icon */
+    border-radius: 1px;
+  }
+  #sidenavCloseBtn .close-icon:before { transform: rotate(45deg); }
+  #sidenavCloseBtn .close-icon:after { transform: rotate(-45deg); }
+
+  /* Mobile behavior */
+  @media (max-width: 991.98px) {
+    #sidenavCloseBtn { display: block; }
+    .sidenav {
+      position: fixed;
+      z-index: 1050;
+      width: 260px;
+      height: 100%;
+      left: 0;
+      top: 0;
+      transition: transform 0.3s cubic-bezier(.77,0,.18,1);
+      background: #fff;
+      transform: translateX(-100%); /* hidden by default */
+    }
+    .sidenav.sidenav-open { transform: translateX(0); }
+    body.sidenav-opened { overflow: hidden; }
+  }
+
+  @media (min-width: 992px) {
+    .sidenav {
+      position: fixed;
+      width: 260px;
+      height: 100%;
+      transform: none !important;
+      background: #fff;
+    }
+    #sidenavCloseBtn { display: none !important; }
+    body { overflow: auto !important; }
+  }
+</style>
+{% endblock stylesheets %}
+
+
+{% block javascripts %}
+<script>
+  // Sidenav open/close logic for mobile
+  document.addEventListener('DOMContentLoaded', function() {
+    var sidenav = document.getElementById('sidenav-main');
+    var closeBtn = document.getElementById('sidenavCloseBtn');
+    var toggler = document.querySelector('.sidenav-toggler');
+
+    // Helper to open sidenav
+    function openSidenav() {
+      if (!sidenav.classList.contains('sidenav-open')) {
+        sidenav.classList.remove('sidenav-closed');
+        sidenav.classList.add('sidenav-open');
+        document.body.classList.add('sidenav-opened');
+      }
+    }
+
+    // Helper to close sidenav
+    function closeSidenav() {
+      if (!sidenav.classList.contains('sidenav-closed')) {
+        sidenav.classList.add('sidenav-closed');
+        sidenav.classList.remove('sidenav-open');
+        document.body.classList.remove('sidenav-opened');
+      }
+    }
+
+    // Open sidenav when toggler is clicked (from navigation.html)
+    if (toggler && sidenav) {
+      toggler.addEventListener('click', function(e) {
+        e.preventDefault();
+        openSidenav();
+      });
+    }
+
+    // Close sidenav when close button is clicked: refresh the page
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.reload();
+      });
+    }
+
+    // Ensure correct state on load and resize
+    function handleSidenavOnResize() {
+      if (!sidenav) return;
+      if (window.innerWidth > 991) {
+        sidenav.classList.remove('sidenav-closed', 'sidenav-open');
+        document.body.classList.remove('sidenav-opened');
+      } else {
+        closeSidenav();
+      }
+    }
+    window.addEventListener('resize', handleSidenavOnResize);
+    handleSidenavOnResize();
+  });
+</script>
+{% endblock javascripts %}
+
+{% with current_path=request.path %}
+<nav class="sidenav navbar navbar-vertical fixed-left navbar-expand-xs navbar-light bg-white" id="sidenav-main">
+  <button id="sidenavCloseBtn" aria-label="Close sidebar" type="button">
+    <span class="close-icon"></span>
+  </button>
+  <div class="scrollbar-inner">
+    <!-- Brand -->
+    <div class="sidenav-header align-items-center">
+      <a class="navbar-brand" href="/">
+        {% if False %}
+          <img src="{{ logo }}" class="navbar-brand-img" alt="logo">
+        {% else %}
+          <span class="navbar-brand-text font-weight-bold" style="font-size: 1.3rem; letter-spacing: 2px;">LEAFIN</span>
+        {% endif %}
+      </a>
+    </div>
+    <div class="navbar-inner">
+      <div class="collapse navbar-collapse" id="sidenav-collapse-main">
+        <h6 class="navbar-heading p-0 text-muted border-bottom">
+          <span class="docs-normal"></span>
+        </h6>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            {% url 'dashboard' as index_url %}
+            <a class="nav-link{% if current_path == index_url or current_path == "/" %} active{% endif %}" href="{{ index_url }}">
+              <i class="ni ni-tv-2"></i>
+              <span class="nav-link-text">Dashboard</span>
+            </a>
+          </li>
+        </ul>
+        <hr class="my-3">
+
+        <!-- Products & Inventory -->
+        <ul class="navbar-nav mb-md-3">
+          <li class="nav-item">
+            {% url 'product_category' as category_url %}
+            <a class="nav-link{% if current_path == category_url %} active{% endif %}" href="{{ category_url }}">
+              <i class="ni ni-bullet-list-67"></i>
+              <span class="nav-link-text">Categories</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            {% url 'product_size' as size_url %}
+            <a class="nav-link{% if current_path == size_url %} active{% endif %}" href="{{ size_url }}">
+              <i class="ni ni-ruler-pencil"></i>
+              <span class="nav-link-text">Size</span>
+            </a>
+          </li>
+          <!-- Colors menu item removed as color functionality has been disabled -->
+          <li class="nav-item">
+            {% url 'products' as products_url %}
+            <a class="nav-link{% if current_path == products_url %} active{% endif %}" href="{{ products_url }}">
+              <i class="ni ni-box-2"></i>
+              <span class="nav-link-text">Products</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            {% url 'product_variants' as variants_url %}
+            <a class="nav-link{% if current_path == variants_url %} active{% endif %}" href="{{ variants_url }}">
+              <i class="ni ni-bullet-list-67"></i>
+              <span class="nav-link-text">Variants</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            {% url 'product_store' as store_url %}
+            <a class="nav-link{% if current_path == store_url %} active{% endif %}" href="{{ store_url }}">
+              <i class="ni ni-image"></i>
+              <span class="nav-link-text">Product Store</span>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Orders & Shipping -->
+        <h6 class="navbar-heading p-0 text-muted border-bottom">
+          <span class="docs-normal">Orders</span>
+        </h6>
+        <ul class="navbar-nav mb-md-3">
+          <li class="nav-item">
+            {% url 'orders' as orders_url %}
+            <a class="nav-link{% if current_path == orders_url %} active{% endif %}" href="{{ orders_url }}">
+              <i class="ni ni-delivery-fast"></i>
+              <span class="nav-link-text">Orders</span>
+            </a>
+          </li>
+       
+          <li class="nav-item">
+            {% url 'customers' as customers_url %}
+            <a class="nav-link{% if current_path == customers_url %} active{% endif %}" href="{{ customers_url }}">
+              <i class="ni ni-single-02"></i>
+              <span class="nav-link-text">Customers</span>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Coupons & Promotions -->
+        <h6 class="navbar-heading p-0 text-muted border-bottom">
+          <span class="docs-normal">Offers</span>
+        </h6>
+        <ul class="navbar-nav mb-md-3">
+          <li class="nav-item">
+            {% url 'coupon' as coupon_url %}
+            <a class="nav-link{% if current_path == coupon_url %} active{% endif %}" href="{{ coupon_url }}">
+              <i class="ni ni-badge"></i>
+              <span class="nav-link-text">Coupons</span>
+            </a>
+          </li>
+        </ul>
+
+        <h6 class="navbar-heading p-0 text-muted border-bottom">
+          <span class="docs-normal">Contact Us</span>
+        </h6>
+        <ul class="navbar-nav mb-md-3">
+          <li class="nav-item">
+            {% url 'contact_us' as contact_url %}
+            <a class="nav-link{% if current_path == contact_url %} active{% endif %}" href="{{ contact_url }}">
+              <i class="ni ni-email-83"></i>
+              <span class="nav-link-text">Contact us</span>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Payments & Transactions -->
+        <h6 class="navbar-heading p-0 text-muted border-bottom">
+          <span class="docs-normal">Payments</span>
+        </h6>
+        <ul class="navbar-nav mb-md-3">
+          <li class="nav-item">
+            {% url 'payment_gateway_list' as gateway_url %}
+            <a class="nav-link{% if current_path == gateway_url %} active{% endif %}" href="{{ gateway_url }}">
+              <i class="ni ni-settings"></i>
+              <span class="nav-link-text">Payment Gateways</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            {% url 'payments' as payments_url %}
+            <a class="nav-link{% if current_path == payments_url %} active{% endif %}" href="{{ payments_url }}">
+              <i class="ni ni-credit-card"></i>
+              <span class="nav-link-text">Payments</span>
+            </a>
+          </li>
+      
+        </ul>
+        <h6 class="navbar-heading p-0 text-muted border-bottom">
+          <span class="docs-normal">Legal</span>
+        </h6>
+        <ul class="navbar-nav mb-md-3">
+          <li class="nav-item">
+            {% url 'terms_condition_list' as terms_url %}
+            <a class="nav-link{% if current_path == terms_url %} active{% endif %}" href="{{ terms_url }}">
+              <i class="ni ni-collection"></i>
+              <span class="nav-link-text">Terms &amp; Conditions</span>
+            </a>
+          </li>
+        </ul>
+        <h6 class="navbar-heading p-0 text-muted border-bottom">
+          <span class="docs-normal">Settings</span>
+        </h6>
+        <ul class="navbar-nav mb-md-3">
+          <li class="nav-item">
+            {% url 'logout' as logout_url %}
+            <a class="nav-link{% if current_path == logout_url %} active{% endif %}" href="{{ logout_url }}">
+              <i class="ni ni-user-run"></i>
+              <span class="nav-link-text">Logout</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+{% endwith %}
+

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title|default:"Invoice" }}</title>
+    <style>
+        body { font-family: "Segoe UI", Arial, sans-serif; color: #222; margin: 0; padding: 0; }
+        .invoice-box {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            border: 1px solid #eee;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .company-details, .client-details {
+            margin-bottom: 30px;
+        }
+        .company-logo {
+            width: 140px;
+            margin-bottom: 10px;
+        }
+        .invoice-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #009879;
+            display: inline-block;
+            color: #009879;
+        }
+        table {
+            width: 100%;
+            line-height: 1.6;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        table th {
+            background: #e3f7ee;
+            text-align: left;
+            color: #009879;
+        }
+        .totals {
+            margin-top: 30px;
+            float: right;
+            width: 320px;
+        }
+        .totals table {
+            border: none;
+        }
+        .totals td {
+            border: none;
+            padding: 8px 12px;
+        }
+        .totals tr.total {
+            background: #e3f7ee;
+            font-weight: bold;
+        }
+        .notes {
+            margin-top: 60px;
+            font-size: 0.92em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <div class="company-details">
+            <span class="navbar-brand-text font-weight-bold" style="font-size: 1.3rem; letter-spacing: 2px;">LEAFIN</span>
+            <div>
+                <strong>Leafin</strong><br>
+                1234 Main Street, City, State ZIP<br>
+                Email: info@company.com<br>
+                Phone: (123) 456-7890
+            </div>
+        </div>
+
+        <div class="invoice-title">
+            {{ title|default:"Invoice" }}
+        </div>
+        <div style="margin-bottom: 30px; float: right;">
+            <strong>Invoice #: </strong>
+            {% if order %}
+                INV-{{ order.id|stringformat:"05d" }}
+            {% else %}
+                -
+            {% endif %}<br>
+            <strong>Date: </strong>
+            {% if order and order.created_at %}{{ order.created_at|date:"Y-m-d" }}{% endif %}<br>
+            <strong>Due: </strong>
+            {% if order and order.created_at %}
+                {{ order.created_at|date:"Y-m-d"|add:"14"|date:"Y-m-d" }}
+            {% endif %}
+        </div>
+        <div style="clear:both"></div>
+
+        <div class="client-details">
+            <strong>Billed To:</strong><br>
+            {% if order and order.user %}
+                {{ order.user.get_full_name|default:order.user.email }}<br>
+                {% if order.shipping_address %}
+                    {{ order.shipping_address.address|linebreaksbr }}<br>
+                    {% if order.shipping_address.city %}{{ order.shipping_address.city }}, {% endif %}
+                    {% if order.shipping_address.state %}{{ order.shipping_address.state }} {% endif %}
+                    {% if order.shipping_address.postcode %}{{ order.shipping_address.postcode }}{% endif %}<br>
+                {% endif %}
+                Email: {{ order.user.email }}
+            {% else %}
+                -
+            {% endif %}
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    {% for header in headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if rows %}
+                    {% for row in rows %}
+                        <tr>
+                            {% for cell in row %}
+                                <td>
+                                    {{ cell }}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="{{ headers|length }}" style="text-align:center;">No items</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <table>
+                <tr>
+                    <td>Subtotal:</td>
+                    <td style="text-align:right;">
+                        {% if order and order.subtotal %}
+                            ${{ order.subtotal|floatformat:2 }}
+                        {% elif order and order.total_amount %}
+                            ${{ order.total_amount|floatformat:2 }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if order and order.shipping_amount %}
+                <tr>
+                    <td>Shipping:</td>
+                    <td style="text-align:right;">
+                        ${{ order.shipping_amount|floatformat:2 }}
+                    </td>
+                </tr>
+                {% endif %}
+                {% if order and order.coupon and order.coupon.discount %}
+                <tr>
+                    <td>Coupon Discount:</td>
+                    <td style="text-align:right;">- ${{ order.coupon.discount|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                <tr class="total">
+                    <td>Total:</td>
+                    <td style="text-align:right;">
+                        {% if order and order.total_amount %}
+                            ${{ order.total_amount|floatformat:2 }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div style="clear:both;"></div>
+
+        <div class="notes">
+            <strong>Notes:</strong><br>
+            Thank you for your business. Payment is due within 14 days.
+        </div>
+    </div>
+</body>
+</html>

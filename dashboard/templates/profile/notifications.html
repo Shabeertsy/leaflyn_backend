@@ -1,0 +1,193 @@
+{% extends base_template %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-12 col-md-12">
+      <div class="card shadow border-0" style="background: #fff;border-radius: 0.5rem;box-shadow: 0 4px 12px rgba(0,0,0,.04);">
+        <div class="card-header d-flex justify-content-between align-items-center px-4 py-3 border-bottom" style="background: #fafbfc;">
+          <h3 class="mb-0" style="color: #2E7D32;font-weight:700;">Notifications</h3>
+          <div class="d-flex align-items-center">
+            {% if dashboard_notifications and dashboard_notifications|length > 0 %}
+              <small class="text-muted mr-3" style="font-size:0.95em;">
+                {{ dashboard_notifications.paginator.count|default:dashboard_notifications|length }} 
+              </small>
+              <form method="post" action="{% url 'clear_all_notifications' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm"
+                        style="border-color: #ba5033;color:#ba5033;">
+                  <i class="ni ni-fat-remove"></i> Clear All
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body p-0">
+          {% if dashboard_notifications and dashboard_notifications|length > 0 %}
+            <div class="list-group list-group-flush">
+              {% for notification in dashboard_notifications %}
+                <div class="d-flex align-items-stretch notification-row" id="notification-{{ notification.id }}" style="border-bottom:1px solid #f1f3f7;">
+                  <a href="{% if notification.order %}{% url 'order_detail' notification.order.id %}{% else %}#{% endif %}"
+                    class="flex-grow-1 list-group-item list-group-item-action border-bottom-0 px-4 py-3 {% if not notification.is_read %}font-weight-bold notification-unread{% else %}notification-read{% endif %}"
+                    style="transition:background .2s;background: {% if not notification.is_read %}#fff6eb{% else %}#fff{% endif %}; border:none;">
+                    <div class="d-flex align-items-center">
+                      <div class="mr-3 flex-shrink-0">
+                        {% if notification.notification_type == "order_placed" %}
+                          <span class="avatar rounded-circle d-flex align-items-center justify-content-center shadow"
+                                style="width:44px;height:44px;background:linear-gradient(135deg,#2E7D32 0%, #e89c55 100%);color:#fff;">
+                            <i class="ni ni-bag-17"></i>
+                          </span>
+                        {% elif notification.notification_type == "order_shipped" %}
+                          <span class="avatar rounded-circle d-flex align-items-center justify-content-center shadow"
+                                style="width:44px;height:44px;background:linear-gradient(135deg,#ffeeba,#f0ad4e);color:#2E7D32;">
+                            <i class="ni ni-delivery-fast"></i>
+                          </span>
+                        {% elif notification.notification_type == "order_delivered" %}
+                          <span class="avatar rounded-circle d-flex align-items-center justify-content-center shadow"
+                                style="width:44px;height:44px;background:linear-gradient(135deg,#d1fae5,#22c55e);color:#165c32;">
+                            <i class="ni ni-check-bold"></i>
+                          </span>
+                        {% elif notification.notification_type == "payment_success" %}
+                          <span class="avatar rounded-circle d-flex align-items-center justify-content-center shadow"
+                                style="width:44px;height:44px;background:linear-gradient(135deg,#d1fae5,#22c55e);color:#165c32;">
+                            <i class="ni ni-check-bold"></i>
+                          </span>
+                        {% elif notification.notification_type == "payment_failed" %}
+                          <span class="avatar rounded-circle d-flex align-items-center justify-content-center shadow"
+                                style="width:44px;height:44px;background:linear-gradient(135deg,#fee2e2,#e02424);color:#991b1b;">
+                            <i class="ni ni-fat-remove"></i>
+                          </span>
+                        {% elif notification.notification_type == "promotion" %}
+                          <span class="avatar rounded-circle d-flex align-items-center justify-content-center shadow"
+                                style="width:44px;height:44px;background:linear-gradient(135deg,#dbeafe,#4f8ef7);color:#233e60;">
+                            <i class="ni ni-bulb-61"></i>
+                          </span>
+                        {% else %}
+                          <span class="avatar rounded-circle d-flex align-items-center justify-content-center shadow"
+                                style="width:44px;height:44px;background:#ececec;color:#2E7D32;">
+                            <i class="ni ni-bell-55"></i>
+                          </span>
+                        {% endif %}
+                      </div>
+                      <div class="flex-grow-1 min-w-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <h6 class="mb-1 text-truncate" style="font-size:1.07rem;max-width:370px;color:#24292f;">
+                            {{ notification.title|default:"Untitled"|truncatechars:48 }}
+                          </h6>
+                          <small class="text-muted" title="{{ notification.created_at|date:"Y-m-d H:i" }}">
+                            {% if notification.created_at %}
+                              {{ notification.created_at|timesince }} ago
+                            {% else %}
+                              &mdash;
+                            {% endif %}
+                          </small>
+                        </div>
+                        <p class="mb-1 text-muted text-truncate" style="font-size:.99rem;">
+                          {{ notification.message|default:"" |truncatechars:110 }}
+                        </p>
+                        <div class="mt-1 d-flex align-items-center flex-wrap small" style="gap:2px;">
+                          <span class="badge badge-pill text-uppercase py-0 px-2"
+                            style="
+                              font-size:9px;letter-spacing:.02em;
+                              line-height:1.4;
+                              {% if notification.priority == 'urgent' %}
+                                background:#e02424;color:#fff;
+                              {% elif notification.priority == 'high' %}
+                                background:#ffd75a;color:#2E7D32;
+                              {% elif notification.priority == 'medium' %}
+                                background:#4f8ef7;color:#fff;
+                              {% else %}
+                                background:#ececec;color:#777;
+                              {% endif %}
+                            ">
+                            {{ notification.get_priority_display }}
+                          </span>
+                          {% if not notification.is_read %}
+                            <span class="badge ml-1 py-0 px-2" style="font-size:9px;line-height:1.4;background-color:#1b9a59!important;color:#fff;">New</span>
+                          {% endif %}
+                          {% if notification.order %}
+                            <span class="badge ml-1 py-0 px-2" style="font-size:9px;line-height:1.4;border:1px solid #2E7D32;color:#2E7D32;background:#fff;">
+                              #{{ notification.order.id }}
+                            </span>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                  <div class="align-self-center pr-3">
+                    <form method="post" action="{% url 'delete_notification' notification.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-link text-danger" title="Delete"
+                        style="color:#ba5033;">
+                        <i class="ni ni-fat-remove"></i>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="p-5 text-center" style="color:#aaa;">
+              <i class="ni ni-bell-55 mb-3" style="font-size:2.5rem;color:#cca982;"></i>
+              <h5 class="mb-0 mt-2 font-weight-normal" style="color:#2E7D32;">You have no notifications.</h5>
+              <p class="small mt-2 mb-0 text-muted" style="color:#a18563;">Notifications about your orders, payments, and offers will appear here.</p>
+            </div>
+          {% endif %}
+        </div>
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 px-3 py-2">
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0" style="--leafin-main:#2E7D32;">
+              {% if page_obj.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous" tabindex="-1"
+                      style="color:#2E7D32;">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link" style="color:#bcbcbc;">&laquo;</span>
+                </li>
+              {% endif %}
+              {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                  <li class="page-item active">
+                    <span class="page-link" style="background:#2E7D32;color:#fff;border-color:#2E7D32;">{{ num }}</span>
+                  </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}" style="color:#2E7D32;">{{ num }}</a>
+                  </li>
+                {% elif forloop.first and num < page_obj.number|add:'-2' %}
+                  <li class="page-item disabled"><span class="page-link" style="color:#bcbcbc;">…</span></li>
+                {% elif forloop.last and num > page_obj.number|add:'2' %}
+                  <li class="page-item disabled"><span class="page-link" style="color:#bcbcbc;">…</span></li>
+                {% endif %}
+              {% endfor %}
+              {% if page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next"
+                      style="color:#2E7D32;">
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link" style="color:#bcbcbc;">&raquo;</span></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .notification-unread { background: #fff6eb !important; }
+  .notification-read { background: #fff !important; }
+  .notification-row:last-child { border-bottom: none; }
+</style>
+{% endblock %}

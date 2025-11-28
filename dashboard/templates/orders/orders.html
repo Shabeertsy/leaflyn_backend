@@ -1,0 +1,750 @@
+{% extends base_template %}
+
+{% block title %} Orders Dashboard {% endblock title %}
+
+{% block stylesheets %}
+<style>
+  /* Global Reset and Base Styles */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: #f5f7fa;
+  }
+
+  /* Responsive Modal Adjustments */
+  @media (max-width: 576px) {
+    .modal-dialog {
+      max-width: 95vw;
+      margin: 1rem auto;
+    }
+  }
+
+  /* Status Badge Styling */
+  .order-status-badge {
+    display: inline-block;
+    font-size: 0.9em;
+    padding: 0.5rem 1.25rem;
+    border-radius: 1rem;
+    font-weight: 500;
+    cursor: default;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .order-status-pending { background: #fef3c7; color: #92400e; border-color: #92400e; }
+  .order-status-processing { background: #dbeafe; color: #1e40af; border-color: #1e40af; }
+  .order-status-shipped { background: #cffafe; color: #155e75; border-color: #155e75; }
+  .order-status-delivered { background: #d1fae5; color: #065f46; border-color: #065f46; }
+  .order-status-cancelled { background: #fee2e2; color: #991b1b; border-color: #991b1b; }
+
+  /* Table Styling */
+  .order-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #ffffff;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
+  .order-table th, .order-table td {
+    vertical-align: middle;
+    padding: 1rem;
+  }
+  .order-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #1f2937;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.05em;
+  }
+  .order-table tbody tr {
+    transition: background 0.2s ease;
+  }
+  .order-table tbody tr:hover {
+    background: #f9fafb;
+  }
+
+  /* Customer and Product Images */
+  .order-customer-avatar, .order-product-img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    margin-right: 0.75rem;
+    border: 1px solid #e5e7eb;
+  }
+
+  /* Filter Container */
+  .order-filter-container {
+    background: #ffffff;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .order-filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .order-filter-group label {
+    display: block;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+  }
+  .order-filter-group select, .order-filter-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.95em;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .order-filter-group select:focus, .order-filter-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  /* Autocomplete Styles */
+  .autocomplete-container {
+    position: relative;
+  }
+  .autocomplete-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 0.25rem;
+  }
+  .autocomplete-suggestion {
+    padding: 0.75rem;
+    cursor: pointer;
+    font-size: 0.95em;
+    color: #1f2937;
+    transition: background 0.2s ease;
+  }
+  .autocomplete-suggestion:hover {
+    background: #f3f4f6;
+  }
+  .autocomplete-suggestion.selected {
+    background: #2E7D32;
+    color: #ffffff;
+  }
+
+  /* Filter Actions and Quick Filters */
+  .order-filter-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+  }
+  .order-quick-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 0.375rem;
+  }
+  .order-quick-filter {
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.9em;
+    font-weight: 500;
+    background: #e5e7eb;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .order-quick-filter:hover {
+    background: #d1d5db;
+    border-color: #9ca3af;
+  }
+  .order-quick-filter.active {
+    background: #2E7D32;
+    color: #ffffff;
+    border-color: #2E7D32;    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  /* Status Chips */
+  .status-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
+  .status-chip {
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    border:none;
+    transition: all 0.2s ease;
+  }
+  .status-chip:hover {
+    filter: brightness(90%);
+  }
+  .status-chip.active {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-weight: 600;
+    border: 1px solid #2E7D32;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.375rem;
+    font-size: 0.95em;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  .btn-primary {
+    background: #2E7D32;
+    border: 1px solid #2E7D32;
+    color: #ffffff;
+  }
+  .btn-primary:hover {
+   .btn-primary:hover {
+-    background: #2E7D32;
+    background: #7a3a17;
+    border-color: #7a3a17;
+   }  }
+  .btn-outline-danger {
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    background: transparent;
+  }
+  .btn-outline-danger:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+  .btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85em;
+  }
+
+  /* Pagination */
+  .pagination {
+    font-size: 0.95em;
+  }
+  .page-link {
+    border: 1px solid #d1d5db;
+    color: #3b82f6;
+    background: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    margin: 0 0.25rem;
+    transition: all 0.2s ease;
+  }
+  .page-link:hover {
+    background: #f3f4f6;
+    border-color: #3b82f6;
+  }
+  .page-item.active .page-link {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #ffffff;
+  }
+  .page-item.disabled .page-link {
+    color: #9ca3af;
+    cursor: not-allowed;
+    background: #f3f4f6;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 767.98px) {
+    .order-filter-row {
+      grid-template-columns: 1fr;
+    }
+    .order-filter-actions .btn {
+      flex: 1;
+    }
+    .order-table th, .order-table td {
+      padding: 0.75rem;
+      font-size: 0.9em;
+    }
+    .order-quick-filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .order-quick-filter {
+      text-align: center;
+    }
+  }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col">
+      <div class="card border-0">
+
+        <!-- Card Header -->
+        <div class="card-header border-0 d-flex justify-content-between align-items-center flex-wrap py-3">
+          <div class="d-flex align-items-center gap-2">
+            <h3 class="mb-0"><i class="ni ni-delivery-fast text-primary mr-2"></i> Orders </h3>
+            <span class="badge ml-3" style="background-color: #2E7D32;color: #fff;">{{ orders.paginator.count }} orders</span>
+          </div>
+          <form method="get" class="search-input-group" style="max-width: 350px;">
+            <div class="search-box">
+              <span class="search-icon">
+                <i class="fas fa-search"></i>
+              </span>
+              <input type="text" name="search" class="form-control" placeholder="Search by id..."
+                     value="{{ request.GET.search|default_if_none:'' }}">
+              <button class="search-btn" type="submit"><i class="fas fa-arrow-right"></i></button>
+              {% if request.GET.search %}
+              <a href="{% url 'orders' %}" class="clear-search" title="Clear search">
+                <i class="fas fa-times"></i>
+              </a>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="order-filter-container">
+          <form method="get" id="orderFiltersForm">
+            <!-- Primary Filters -->
+            <div class="order-filter-row">
+              <!-- Date Range -->
+              <div class="order-filter-group">
+                <label for="start_date">Date Range</label>
+                <div class="input-daterange d-flex gap-2">
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text"><i class="ni ni-calendar-grid-58"></i></span>
+                    </div>
+                    <input id="start_date" class="form-control mr-2" placeholder="Start date" type="date" name="start_date" value="{{ request.GET.start_date }}" aria-label="Start date">
+                  </div>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text"><i class="ni ni-calendar-grid-58"></i></span>
+                    </div>
+                    <input class="form-control" placeholder="End date" type="date" name="end_date" value="{{ request.GET.end_date }}" aria-label="End date">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Status Filter -->
+              <div class="order-filter-group">
+                <label>Order Status</label>
+                <div class="status-filter-chips">
+                  {% for status in order_statuses %}
+                    <button type="button" class="status-chip order-status-{{ status|lower }} {% if request.GET.status == status %}active{% endif %}" 
+                            onclick="setStatusFilter('{{ status }}')" aria-label="Filter by {{ status }} status">
+                      {{ status | title }}
+                    </button>
+                  {% endfor %}
+                  <input type="hidden" name="status" id="statusFilter" value="{{ request.GET.status }}">
+                </div>
+              </div>
+            </div>
+
+            <!-- Secondary Filters -->
+            <div class="order-filter-row">
+              <!-- Product Filter -->
+              <div class="order-filter-group">
+                <label for="product">Product</label>
+                <select id="product" class="form-control" name="product" aria-label="Filter by product">
+                  <option value="">All Products</option>
+                  {% for product in products %}
+                    <option value="{{ product.id }}" {% if request.GET.product == product.id|stringformat:"s" %}selected{% endif %}>{{ product.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Customer Search Filter -->
+              <div class="order-filter-group">
+                <label for="customer_search">Customer</label>
+                <div class="autocomplete-container">
+                  <input type="text" id="customer_search" class="form-control" placeholder="Search customers..." 
+                         value="{% if request.GET.customer %}{% for customer in customers %}{% if customer.id|stringformat:'s' == request.GET.customer %}{{ customer.first_name }} {{ customer.last_name }}{% endif %}{% endfor %}{% endif %}" 
+                         aria-label="Search customers">
+                  <input type="hidden" name="customer" id="customer_id" value="{{ request.GET.customer }}">
+                  <div id="customer_suggestions" class="autocomplete-suggestions" style="display: none;"></div>
+                </div>
+              </div>
+
+              <!-- Amount Range -->
+              <div class="order-filter-group">
+                <label>Amount Range</label>
+                <div class="input-group d-flex gap-2">
+                  <input type="number" class="form-control" placeholder="Min amount" name="min_amount" value="{{ request.GET.min_amount }}" step="0.01" aria-label="Minimum amount">
+                  <input type="number" class="form-control" placeholder="Max amount" name="max_amount" value="{{ request.GET.max_amount }}" step="0.01" aria-label="Maximum amount">
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Date Filters and Actions -->
+            <div class="order-filter-actions">
+              <div class="order-quick-filters">
+                <button type="button" class="order-quick-filter {% if not request.GET.start_date and not request.GET.end_date %}active{% endif %}" 
+                        onclick="setDateRange('', '')" aria-label="Show all orders">All Time</button>
+                <button type="button" class="order-quick-filter {% if request.GET.start_date == today|date:'Y-m-d' and request.GET.end_date == today|date:'Y-m-d' %}active{% endif %}" 
+                        onclick="setDateRange('{{ today|date:'Y-m-d' }}', '{{ today|date:'Y-m-d' }}')" aria-label="Show today's orders">Today</button>
+                <button type="button" class="order-quick-filter {% if request.GET.start_date == week_ago|date:'Y-m-d' and request.GET.end_date == today|date:'Y-m-d' %}active{% endif %}" 
+                        onclick="setDateRange('{{ week_ago|date:'Y-m-d' }}', '{{ today|date:'Y-m-d' }}')" aria-label="Show last 7 days' orders">Last 7 Days</button>
+                <button type="button" class="order-quick-filter {% if request.GET.start_date == month_ago|date:'Y-m-d' and request.GET.end_date == today|date:'Y-m-d' %}active{% endif %}" 
+                        onclick="setDateRange('{{ month_ago|date:'Y-m-d' }}', '{{ today|date:'Y-m-d' }}')" aria-label="Show last 30 days' orders">Last 30 Days</button>
+                <button type="button" class="order-quick-filter {% if request.GET.start_date == year_ago|date:'Y-m-d' and request.GET.end_date == today|date:'Y-m-d' %}active{% endif %}" 
+                        onclick="setDateRange('{{ year_ago|date:'Y-m-d' }}', '{{ today|date:'Y-m-d' }}')" aria-label="Show last year's orders">Last Year</button>
+              </div>
+              <div class="ml-auto d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-filter mr-1"></i> Apply Filters
+                </button>
+                {% if request.GET.product or request.GET.start_date or request.GET.end_date or request.GET.search or request.GET.status or request.GET.customer or request.GET.min_amount or request.GET.max_amount %}
+                  <a href="{% url 'orders' %}" class="btn btn-outline-danger">
+                    <i class="fas fa-times mr-1"></i> Clear Filters
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+            <input type="hidden" name="search" value="{{ request.GET.search }}">
+          </form>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 mb-3 mr-3">
+          <!-- Icon-only Download Excel Button -->
+          <form method="get" action="{% url 'download_order_excel' %}">
+            {% for key, value in request.GET.items %}
+              {% if value %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+              {% endif %}
+            {% endfor %}
+            <button type="submit" class="btn btn-primary" title="Download Orders as Excel" style="padding: 0.5rem 0.75rem;">
+              <i class="fas fa-file-excel"></i>
+            </button>
+          </form>
+          <!-- Icon-only Check All Checkbox -->
+          <div class="form-check ml-3" style="display: flex; align-items: center;">
+            <input title="Check this for all orders" class="form-check-input" type="checkbox" id="checkAllOrders" onclick="toggleAllOrders(this)" style="margin-right: 0.5rem;">
+          </div>
+        </div>
+        <script>
+          function toggleAllOrders(source) {
+            const checkboxes = document.querySelectorAll('.order-checkbox');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+          }
+        </script>
+
+        <!-- Orders Table -->
+        <div class="table-responsive mb-5 pb-5">
+          <table class="table order-table">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">Order ID</th>
+                <th scope="col">Date</th>
+                <th scope="col">Customer</th>
+                <th scope="col">Products</th>
+                <th scope="col">Sub Total</th>
+                <th scope="col">Total</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+              <tr>
+                <td class="order-id-cell">
+                  <span>#{{ order.id }}</span>
+                  <div class="text-muted small">via {{ order.payment.method|default:"N/A" }}</div>
+                </td>
+                <td>
+                  <span>{{ order.created_at|date:"M d, Y" }}</span>
+                  <div class="text-muted small">{{ order.created_at|date:"h:i A" }}</div>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <img src="{% if order.user.avatar %}{{ order.user.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ order.user.get_full_name|urlencode }}&background=6c63ff&color=fff&size=40{% endif %}" 
+                         class="order-customer-avatar" alt="{{ order.user.get_full_name }}'s avatar">
+                    <div>
+                      <div>{{ order.user.get_full_name }}</div>
+                      <div class="text-muted small">{{ order.user.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="order-product-list" style="max-height: 150px; overflow-y: auto;">
+                    {% for item in order.items.all|slice:":3" %}
+                      <div class="order-product-item d-flex align-items-center mb-2">
+                        <img src="{% if item.variant.images.first.image %}{{ item.variant.images.first.image.url }}{% else %}https://via.placeholder.com/40{% endif %}" 
+                             class="order-product-img" alt="{{ item.variant.product.name }}">
+                        <div>
+                          <div>{{ item.variant.product.name }}</div>
+                          <div class="text-muted small">Qty: {{ item.quantity }} × ₹{{ item.variant.discounted_price }}</div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                    {% if order.items.count > 3 %}
+                      <div class="text-center text-muted small">+{{ order.items.count|add:"-3" }} more</div>
+                    {% endif %}
+                  </div>
+                </td>
+                <td class="order-subtotal-cell">
+                  <span class="text-muted small d-block">Subtotal:</span>
+                  <span>₹{{ order.subtotal|floatformat:2 }}</span>
+                </td>
+                <td class="order-total-cell">
+                  {% if order.coupon %}
+                    <div class="text-success small">
+                      {% if order.coupon.offer_type == "percentage" %}
+                        Discount: -{{ order.coupon.offer|floatformat:2 }}%
+                      {% elif order.coupon.offer_type == "amount" %}
+                        Discount: -₹{{ order.coupon.offer|floatformat:2 }}
+                      {% else %}
+                        Discount Applied
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                  <div class="mt-1">
+                    <span class="text-muted small d-block">Total:</span>
+                    <span>₹{{ order.total_amount|floatformat:2 }}</span>
+                  </div>
+                </td>
+                  <div class="mt-1">
+                    <span class="text-muted small d-block">Total:</span>
+                    <span>₹{{ order.total_amount|floatformat:2 }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="order-status-badge order-status-{{ order.status|lower }}">{{ order.status }}</span>
+                </td>
+                <td>
+                  <div class="d-flex gap-1">
+                    <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-info" title="View order details" data-toggle="tooltip" aria-label="View order #{{ order.id }}">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="" class="btn btn-sm btn-primary" title="Edit order" data-toggle="tooltip" aria-label="Edit order #{{ order.id }}">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'download_order_pdf' order.id %}" class="btn btn-sm btn-outline-secondary" title="Download PDF" data-toggle="tooltip" aria-label="Download order #{{ order.id }} PDF" target="_blank">
+                      <i class="fas fa-file-pdf"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-muted py-5">
+                  <i class="ni ni-archive-2" style="font-size: 2.5rem;"></i><br>
+                  No orders found. Try adjusting your filters.
+                  {% if request.GET.product or request.GET.start_date or request.GET.end_date or request.GET.search or request.GET.status or request.GET.customer or request.GET.min_amount or request.GET.max_amount %}
+                    <div class="mt-3">
+                      <a href="{% url 'orders' %}" class="btn btn-sm btn-outline-primary">Clear Filters</a>
+                    </div>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if orders.has_other_pages %}
+        <div class="card-footer py-3">
+          <nav aria-label="Order pagination">
+            <ul class="pagination justify-content-end mb-0">
+              {% if orders.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ orders.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date|urlencode }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.product %}&product={{ request.GET.product|urlencode }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer|urlencode }}{% endif %}{% if request.GET.min_amount %}&min_amount={{ request.GET.min_amount|urlencode }}{% endif %}{% if request.GET.max_amount %}&max_amount={{ request.GET.max_amount|urlencode }}{% endif %}" aria-label="Previous page">
+                    <i class="fas fa-angle-left"></i>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                </li>
+              {% endif %}
+              {% for i in orders.paginator.page_range %}
+                {% if orders.number == i %}
+                  <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date|urlencode }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.product %}&product={{ request.GET.product|urlencode }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer|urlencode }}{% endif %}{% if request.GET.min_amount %}&min_amount={{ request.GET.min_amount|urlencode }}{% endif %}{% if request.GET.max_amount %}&max_amount={{ request.GET.max_amount|urlencode }}{% endif %}">{{ i }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+              {% if orders.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ orders.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search|urlencode }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date|urlencode }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.product %}&product={{ request.GET.product|urlencode }}{% endif %}{% if request.GET.customer %}&customer={{ request.GET.customer|urlencode }}{% endif %}{% if request.GET.min_amount %}&min_amount={{ request.GET.min_amount|urlencode }}{% endif %}{% if request.GET.max_amount %}&max_amount={{ request.GET.max_amount|urlencode }}{% endif %}" aria-label="Next page">
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+  // Customer data for autocomplete
+  const customers = [
+    {% for customer in customers %}
+      { id: "{{ customer.id }}", name: "{{ customer.first_name }} {{ customer.last_name }}", email: "{{ customer.email }}" }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  // Autocomplete functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const customerSearchInput = document.getElementById('customer_search');
+    const customerIdInput = document.getElementById('customer_id');
+    const suggestionsContainer = document.getElementById('customer_suggestions');
+    const orderFiltersForm = document.getElementById('orderFiltersForm');
+    let selectedIndex = -1;
+
+    function showSuggestions(suggestions) {
+      suggestionsContainer.innerHTML = '';
+      if (suggestions.length === 0) {
+        suggestionsContainer.style.display = 'none';
+        return;
+      }
+
+      suggestions.forEach((customer, index) => {
+        const div = document.createElement('div');
+        div.classList.add('autocomplete-suggestion');
+        div.textContent = `${customer.name} (${customer.email})`;
+        div.dataset.id = customer.id;
+        div.dataset.name = customer.name;
+        div.addEventListener('click', function() {
+          customerSearchInput.value = customer.name;
+          customerIdInput.value = customer.id;
+          suggestionsContainer.style.display = 'none';
+          orderFiltersForm.submit();
+        });
+        div.addEventListener('mouseover', function() {
+          selectedIndex = index;
+          updateSelectedSuggestion();
+        });
+        suggestionsContainer.appendChild(div);
+      });
+      suggestionsContainer.style.display = 'block';
+    }
+
+    function updateSelectedSuggestion() {
+      const suggestionElements = suggestionsContainer.querySelectorAll('.autocomplete-suggestion');
+      suggestionElements.forEach((el, idx) => {
+        el.classList.toggle('selected', idx === selectedIndex);
+      });
+    }
+
+    customerSearchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+      selectedIndex = -1;
+      if (query === '') {
+        suggestionsContainer.style.display = 'none';
+        customerIdInput.value = '';
+        return;
+      }
+
+      const suggestions = customers.filter(customer =>
+        customer.name.toLowerCase().includes(query) || customer.email.toLowerCase().includes(query)
+      );
+      showSuggestions(suggestions);
+    });
+
+    customerSearchInput.addEventListener('keydown', function(e) {
+      const suggestionElements = suggestionsContainer.querySelectorAll('.autocomplete-suggestion');
+      if (suggestionElements.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIndex = Math.min(selectedIndex + 1, suggestionElements.length - 1);
+        updateSelectedSuggestion();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIndex = Math.max(selectedIndex - 1, -1);
+        updateSelectedSuggestion();
+      } else if (e.key === 'Enter' && selectedIndex >= 0) {
+        e.preventDefault();
+        const selectedSuggestion = suggestionElements[selectedIndex];
+        customerSearchInput.value = selectedSuggestion.dataset.name;
+        customerIdInput.value = selectedSuggestion.dataset.id;
+        suggestionsContainer.style.display = 'none';
+        orderFiltersForm.submit();
+      } else if (e.key === 'Escape') {
+        suggestionsContainer.style.display = 'none';
+        selectedIndex = -1;
+      }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!customerSearchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+        suggestionsContainer.style.display = 'none';
+        selectedIndex = -1;
+      }
+    });
+
+    // Handle status filter clicks
+    window.setStatusFilter = function(status) {
+      const statusInput = document.getElementById('statusFilter');
+      statusInput.value = status;
+      orderFiltersForm.submit();
+    };
+
+    // Handle quick date range filters
+    window.setDateRange = function(startDate, endDate) {
+      document.querySelector('input[name="start_date"]').value = startDate;
+      document.querySelector('input[name="end_date"]').value = endDate;
+      orderFiltersForm.submit();
+    };
+
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+      new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Auto-submit on product select change
+    document.getElementById('product').addEventListener('change', function() {
+      orderFiltersForm.submit();
+    });
+
+    // Auto-submit on amount range input change (after a short delay)
+    const amountInputs = document.querySelectorAll('input[name="min_amount"], input[name="max_amount"]');
+    let timeout;
+    amountInputs.forEach(input => {
+      input.addEventListener('input', function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => orderFiltersForm.submit(), 500);
+      });
+    });
+  });
+</script>
+{% endblock javascripts %}

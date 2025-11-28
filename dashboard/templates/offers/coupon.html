@@ -1,0 +1,344 @@
+{% extends base_template %}
+
+{% block title %} Coupons {% endblock title %}
+
+{% block content %}
+
+<!-- Django messages with category-style alerts -->
+{% if messages %}
+  <div class="custom-message-container" id="custom-message-container">
+    {% for message in messages %}
+      {% if "coupon-success" in message.tags %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="fas fa-check-circle mr-2"></i>{{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% elif "coupon-error" in message.tags %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="fas fa-exclamation-circle mr-2"></i>{{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% else %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+          <i class="fas fa-info-circle mr-2"></i>{{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        
+        <!-- Header -->
+        <div class="card-header border-0 d-flex justify-content-between align-items-center flex-wrap">
+          <div class="d-flex align-items-center">
+            <button type="button" class="ad-style-btn mr-3"
+                    data-toggle="modal" data-target="#addCouponModal">
+              <span class="btn-icon">
+                <i class="fas fa-plus"></i>
+              </span>
+              <span class="add-tooltip">Add Coupon</span>
+            </button>
+            <h3 class="mb-0">Coupons</h3>
+          </div>
+          <form method="get" class="search-input-group" style="max-width: 350px;">
+            <div class="search-box">
+              <span class="search-icon">
+                <i class="fas fa-search"></i>
+              </span>
+              <input type="text" name="search" class="form-control" placeholder="Search coupons..."
+                     value="{{ request.GET.search|default_if_none:'' }}">
+              <button class="search-btn" type="submit"><i class="fas fa-arrow-right"></i></button>
+              {% if request.GET.search %}
+              <a href="{% url 'coupon' %}" class="clear-search" title="Clear search">
+                <i class="fas fa-times"></i>
+              </a>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+          <table class="table align-items-center table-flush">
+            <thead class="thead-light">
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Discount</th>
+                <th>Min Price</th>
+                <th>Max Price</th>
+                <th>Start Date</th>
+                <th>Expiry Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for coupon in coupons %}
+              <tr>
+                <td>{{ forloop.counter0|add:coupons.start_index }}</td>
+                <td>{{ coupon.name }}</td>
+                <td>{{ coupon.code }}</td>
+                <td>
+                  {% if coupon.offer_type == 'percentage' %}
+                    {{ coupon.offer }}%
+                  {% elif coupon.offer_type == 'amount' %}
+                    ₹{{ coupon.offer }}
+                  {% else %}
+                    {{ coupon.offer }}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if coupon.min_price %}
+                    ₹{{ coupon.min_price }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {% if coupon.max_price %}
+                    ₹{{ coupon.max_price }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {{ coupon.valid_from|date:"Y-m-d H:i" }}
+                </td>
+                <td>
+                  {{ coupon.valid_to|date:"Y-m-d H:i" }}
+                </td>
+                <td>
+                  {% now "Y-m-d H:i:s" as current_time %}
+                  {% if coupon.valid_to and coupon.valid_to|stringformat:"s" < current_time %}
+                    <span class="badge badge-danger">Expired</span>
+                  {% else %}
+                    {% if coupon.active %}
+                      <span class="badge badge-success">Active</span>
+                    {% else %}
+                      <span class="badge badge-secondary">Inactive</span>
+                    {% endif %}
+                  {% endif %}
+                </td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-primary"
+                          data-toggle="modal" data-target="#editCouponModal-{{ coupon.id }}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger"
+                          data-toggle="modal" data-target="#deleteCouponModal-{{ coupon.id }}">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Edit Modal -->
+              <div class="modal fade" id="editCouponModal-{{ coupon.id }}" tabindex="-1" aria-labelledby="editCouponModalLabel-{{ coupon.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <form method="post" action="{% url 'edit_coupon' coupon.id %}" class="needs-validation" novalidate>
+                      {% csrf_token %}
+                      <div class="modal-header justify-content-center" style="background: #C8E6C9;">
+                        <h6 class="modal-title w-100 text-center mb-0" id="editCouponModalLabel-{{ coupon.id }}">Edit Coupon Status</h6>
+                        <button type="button" class="close position-absolute" style="right: 1rem; top: 1rem;" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="form-group">
+                          <label>Active</label>
+                          <select name="active" class="form-control" required>
+                            <option value="True" {% if coupon.active %}selected{% endif %}>Active</option>
+                            <option value="False" {% if not coupon.active %}selected{% endif %}>Inactive</option>
+                          </select>
+                          <div class="invalid-feedback">Please select active status.</div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Delete Modal -->
+              <div class="modal fade modal-confirm" id="deleteCouponModal-{{ coupon.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header border-0">
+                      <div class="icon-box mx-auto">
+                        <i class="fas fa-exclamation-triangle"></i>
+                      </div>
+                    </div>
+                    <div class="modal-body text-center">
+                      <h5>Delete Coupon</h5>
+                      <p>Are you sure you want to delete coupon "<strong>{{ coupon.code }}</strong>"?</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                      <a href="{% url 'delete_coupon' coupon.id %}" class="btn btn-danger">Delete</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-muted">No coupons found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if coupons.has_other_pages %}
+        <div class="card-footer py-3">
+          <nav>
+            <ul class="pagination justify-content-end mb-0">
+              {% if coupons.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ coupons.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                    <i class="fas fa-angle-left"></i>
+                  </a>
+                </li>
+              {% endif %}
+              {% for i in coupons.paginator.page_range %}
+                {% if coupons.number == i %}
+                  <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                  <li class="page-item"><a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a></li>
+                {% endif %}
+              {% endfor %}
+              {% if coupons.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ coupons.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addCouponModal" tabindex="-1" aria-labelledby="addCouponModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="{% url 'add_coupon' %}" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="modal-header justify-content-center" style="background: #C8E6C9;">
+          <h6 class="modal-title w-100 text-center mb-0" id="addCouponModalLabel">Add New Coupon</h6>
+          <button type="button" class="close position-absolute" style="right: 1rem; top: 1rem;" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Coupon Name</label>
+                <input type="text" name="name" class="form-control" required>
+                <div class="invalid-feedback">Coupon name is required.</div>
+              </div>
+              <div class="form-group">
+                <label>Coupon Code</label>
+                <input type="text" name="code" class="form-control" required>
+                <div class="invalid-feedback">Coupon code is required.</div>
+              </div>
+              <div class="form-group">
+                <label>Active</label>
+                <select name="active" class="form-control" required>
+                  <option value="True" selected>Active</option>
+                  <option value="False">Inactive</option>
+                </select>
+                <div class="invalid-feedback">Please select active status.</div>
+              </div>
+              <div class="form-group">
+                <label>Valid From</label>
+                <input type="datetime-local" name="valid_from" class="form-control" required>
+                <div class="invalid-feedback">Valid from date and time is required.</div>
+              </div>
+              <div class="form-group">
+                <label>Valid To</label>
+                <input type="datetime-local" name="valid_to" class="form-control" required>
+                <div class="invalid-feedback">Valid to date and time is required.</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Offer Type</label>
+                <select name="offer_type" class="form-control" required>
+                  <option value="percentage">Percentage</option>
+                  <option value="amount">Amount</option>
+                </select>
+                <div class="invalid-feedback">Please select offer type.</div>
+              </div>
+              <div class="form-group">
+                <label>Offer</label>
+                <input type="number" step="0.01" name="offer" class="form-control" required>
+                <div class="invalid-feedback">Offer value is required.</div>
+              </div>
+              <div class="form-group">
+                <label>Max Price</label>
+                <input type="number" step="0.01" name="max_price" class="form-control" required>
+                <div class="invalid-feedback">Max price is required.</div>
+              </div>
+              <div class="form-group">
+                <label>Min Price</label>
+                <input type="number" step="0.01" name="min_price" class="form-control" required>
+                <div class="invalid-feedback">Min price is required.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Coupon</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Bootstrap validation for all forms with .needs-validation
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    var forms = document.getElementsByClassName('needs-validation');
+    Array.prototype.forEach.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+})();
+</script>
+
+
+{% endblock content %}

@@ -1,0 +1,675 @@
+{% extends base_template %}
+
+{% block title %} Payment Gateway Management {% endblock title %}
+
+{% block stylesheets %}
+<style>
+  .gateway-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid #eee;
+    margin-right: 1rem;
+    padding: 3px;
+  }
+  .table th, .table td {
+    vertical-align: middle !important;
+  }
+  .badge-sm {
+    font-size: 0.7rem;
+    padding: 0.25em 0.5em;
+  }
+  .kv-row .form-control {
+    font-size: .875rem;
+  }
+  .kv-row .input-group-append button {
+    border-radius: 0 .25rem .25rem 0;
+  }
+  
+  /* Improved Modal Styles */
+  .modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  }
+  
+  .modal-header {
+    border-bottom: 1px solid #e9ecef;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+  }
+  
+  /* Form Group Improvements */
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .form-group label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    color: #525f7f;
+  }
+  
+  .form-control, .form-select {
+    border-radius: 6px;
+    border: 1px solid #dce1e9;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #5e72e4;
+    box-shadow: 0 0 0 2px rgba(94, 114, 228, 0.1);
+  }
+  
+  /* Enhanced Checkbox Styles */
+  .checkbox-group {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.25rem;
+    border: 1px solid #e9ecef;
+  }
+  
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+  
+  .checkbox-item:hover {
+    background: rgba(94, 114, 228, 0.05);
+  }
+  
+  .checkbox-item:last-child {
+    margin-bottom: 0;
+  }
+  
+  .custom-checkbox {
+    position: relative;
+    margin-right: 0.75rem;
+  }
+  
+  .custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+  }
+  
+  .checkmark {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  
+  .custom-checkbox input:checked ~ .checkmark {
+    background: #5e72e4;
+    border-color: #5e72e4;
+  }
+  
+  .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  
+  .custom-checkbox input:checked ~ .checkmark:after {
+    display: block;
+  }
+  
+  .checkbox-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #525f7f;
+    cursor: pointer;
+    flex: 1;
+  }
+  
+  /* Improved KV Rows */
+  .kv-row {
+    margin-bottom: 0.5rem;
+  }
+  
+  .kv-row .input-group {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  
+  .kv-row .form-control {
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid #e9ecef;
+  }
+  
+  .kv-row .form-control:first-child {
+    border-radius: 6px 0 0 6px;
+  }
+  
+  /* Better Button Styles */
+  .btn {
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.625rem 1.25rem;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+  }
+  
+  .btn-success {
+    background: linear-gradient(135deg, #2dce89 0%, #26af76 100%);
+    border: none;
+  }
+  
+  .btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 206, 137, 0.3);
+  }
+  
+  /* Responsive Improvements */
+  @media (max-width: 768px) {
+    .modal-dialog {
+      margin: 1rem;
+    }
+    
+    .modal-body .row > [class*="col-"] {
+      margin-bottom: 1rem;
+    }
+  }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+<!-- Messages -->
+{% if messages %}
+  <div class="custom-message-container" id="custom-message-container" style="margin-bottom:1rem;">
+    {% for message in messages %}
+      {% if "gateway-success" in message.tags %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="fas fa-check-circle mr-2"></i>{{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% elif "gateway-error" in message.tags %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="fas fa-exclamation-circle mr-2"></i>{{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% else %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+          <i class="fas fa-info-circle mr-2"></i>{{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col">
+      <div class="card shadow">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+          <h3 class="mb-0">
+            <i class="ni ni-credit-card text-success mr-2"></i> Payment Gateways
+          </h3>
+          <button 
+            type="button"
+            class="btn btn-success btn-sm"
+            data-toggle="modal"
+            data-target="#addGatewayModal"
+          >
+            <i class="fas fa-plus"></i> Add Gateway
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-items-center table-flush">
+            <thead class="thead-light">
+              <tr>
+                <th>#</th>
+                <th>Logo</th>
+                <th>Gateway</th>
+                <th>Environment</th>
+                <th>Default</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Min/Max ₹</th>
+                <th>Fees</th>
+                <th>Supports</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for gateway in gateways %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  {% if gateway.logo %}
+                  <img src="{{ gateway.logo.url }}" class="gateway-logo" alt="{{ gateway.display_name }}">
+                  {% else %}
+                  <span class="gateway-logo d-inline-flex align-items-center justify-content-center" style="font-weight:600;background:#eee">{{ gateway.display_name|slice:":2"|upper }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <strong>{{ gateway.display_name }}</strong><br>
+                  <small class="text-muted">{{ gateway.get_name_display }}</small>
+                  {% if gateway.description %}
+                  <br><span class="text-muted small">{{ gateway.description|truncatewords:10 }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge badge-{% if gateway.environment == 'production' %}danger{% else %}warning{% endif %} badge-sm">
+                    {{ gateway.get_environment_display }}
+                  </span>
+                </td>
+                <td>
+                  {% if gateway.is_default %}
+                    <span class="badge badge-info">Default</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if gateway.is_active %}
+                    <span class="badge badge-success">Active</span>
+                  {% else %}
+                    <span class="badge badge-secondary">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>{{ gateway.priority }}</td>
+                <td>
+                  ₹{{ gateway.min_amount|floatformat:2 }} 
+                  / 
+                  {% if gateway.max_amount %}
+                    ₹{{ gateway.max_amount|floatformat:2 }}
+                  {% else %}
+                    <span class="text-muted">Unlimited</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {{ gateway.transaction_fee_percentage|floatformat:2 }}% + ₹{{ gateway.transaction_fee_fixed|floatformat:2 }}
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1">
+                    {% if gateway.supports_refund %}<span class="badge badge-success badge-sm">R</span>{% endif %}
+                    {% if gateway.supports_recurring %}<span class="badge badge-primary badge-sm">Recur</span>{% endif %}
+                    {% if gateway.supports_upi %}<span class="badge badge-info badge-sm">UPI</span>{% endif %}
+                    {% if gateway.supports_cards %}<span class="badge badge-dark badge-sm">Card</span>{% endif %}
+                    {% if gateway.supports_netbanking %}<span class="badge badge-secondary badge-sm">NB</span>{% endif %}
+                    {% if gateway.supports_wallets %}<span class="badge badge-warning badge-sm">Wallet</span>{% endif %}
+                  </div>
+                </td>
+                <td>
+                  {% comment %} <a href="{% url 'gateway_edit' gateway.id %}" class="btn btn-sm btn-primary" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <a href="{% url 'gateway_delete' gateway.id %}" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this gateway?');">
+                    <i class="fas fa-trash"></i>
+                  </a> {% endcomment %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="11" class="text-center text-muted py-5">
+                  <i class="ni ni-archive-2" style="font-size:2rem;"></i><br>
+                  No payment gateways configured.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if gateways.has_other_pages %}
+        <div class="card-footer py-3">
+          <nav>
+            <ul class="pagination justify-content-end mb-0">
+              {% if gateways.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ gateways.previous_page_number }}" tabindex="-1">
+                    <i class="fas fa-angle-left"></i>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                </li>
+              {% endif %}
+
+              {% for i in gateways.paginator.page_range %}
+                {% if gateways.number == i %}
+                  <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                  <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+              {% endfor %}
+
+              {% if gateways.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ gateways.next_page_number }}">
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Gateway Modal -->
+<div class="modal fade" id="addGatewayModal" tabindex="-1" aria-labelledby="addGatewayModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <form id="gatewayForm" method="post" action="{% url 'add_payment_gateway' %}" class="needs-validation" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addGatewayModalLabel">
+            <i class="ni ni-credit-card text-success mr-2"></i>Add New Payment Gateway
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+
+            <!-- Column 1 - Basic Info -->
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-control-label">Gateway <span class="text-danger">*</span></label>
+                {{ form.name }}
+                <div class="invalid-feedback">Please select a gateway.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-control-label">Display Name <span class="text-danger">*</span></label>
+                {{ form.display_name }}
+                <div class="invalid-feedback">Display name is required.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-control-label">Environment <span class="text-danger">*</span></label>
+                {{ form.environment }}
+              </div>
+
+              <div class="form-group">
+                <label class="form-control-label">Priority (0 = highest)</label>
+                {{ form.priority }}
+                <small class="form-text text-muted">Lower numbers have higher priority</small>
+                <div class="invalid-feedback">Valid priority required.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-control-label">Logo</label>
+                {{ form.logo }}
+                <small class="form-text text-muted">Recommended: 80x80px transparent PNG</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-control-label">Description</label>
+                {{ form.description }}
+              </div>
+            </div>
+
+            <!-- Column 2 - Fees & Configuration -->
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-control-label">Min Amount (₹) <span class="text-danger">*</span></label>
+                {{ form.min_amount }}
+                <div class="invalid-feedback">Minimum amount required.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-control-label">Max Amount (₹)</label>
+                {{ form.max_amount }}
+                <small class="form-text text-muted">Leave blank for unlimited</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-control-label">Transaction Fee (%)</label>
+                {{ form.transaction_fee_percentage }}
+                <small class="form-text text-muted">Percentage fee per transaction</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-control-label">Fixed Fee (₹)</label>
+                {{ form.transaction_fee_fixed }}
+                <small class="form-text text-muted">Fixed fee per transaction</small>
+              </div>
+
+              <!-- CREDENTIALS -->
+              <div class="form-group">
+                <label class="form-control-label">Credentials <span class="text-danger">*</span></label>
+                <small class="form-text text-muted mb-2">Add required API keys and secrets</small>
+                <div id="credentials-container"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addKVRow('credentials')">
+                  <i class="fas fa-plus"></i> Add Credential
+                </button>
+                <textarea name="credentials" id="credentials-json" class="d-none" required></textarea>
+                <div class="invalid-feedback">At least one credential is required.</div>
+              </div>
+
+              <!-- CONFIGURATION -->
+              <div class="form-group">
+                <label class="form-control-label">Additional Configuration</label>
+                <small class="form-text text-muted mb-2">Optional extra settings</small>
+                <div id="config-container"></div>
+                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addKVRow('config')">
+                  <i class="fas fa-plus"></i> Add Config
+                </button>
+                <textarea name="configuration" id="config-json" class="d-none"></textarea>
+              </div>
+            </div>
+
+            <!-- Column 3 - Features & Status -->
+            <div class="col-md-4">
+              <!-- Status Toggles -->
+              <div class="form-group">
+                <div class="checkbox-item">
+                  <label class="custom-checkbox">
+                    {{ form.is_active }}
+                    <span class="checkmark"></span>
+                  </label>
+                  <span class="checkbox-label">Active Gateway</span>
+                </div>
+                
+                <div class="checkbox-item">
+                  <label class="custom-checkbox">
+                    {{ form.is_default }}
+                    <span class="checkmark"></span>
+                  </label>
+                  <span class="checkbox-label">Default Gateway</span>
+                </div>
+              </div>
+
+              <!-- Supported Features -->
+              <div class="checkbox-group">
+                <h6 class="text-uppercase text-muted mb-3">Supported Features</h6>
+                
+                <div class="checkbox-item">
+                  <label class="custom-checkbox">
+                    {{ form.supports_refund }}
+                    <span class="checkmark"></span>
+                  </label>
+                  <span class="checkbox-label">Refunds</span>
+                </div>
+                
+                <div class="checkbox-item">
+                  <label class="custom-checkbox">
+                    {{ form.supports_recurring }}
+                    <span class="checkmark"></span>
+                  </label>
+                  <span class="checkbox-label">Recurring Payments</span>
+                </div>
+                
+                <div class="checkbox-item">
+                  <label class="custom-checkbox">
+                    {{ form.supports_upi }}
+                    <span class="checkmark"></span>
+                  </label>
+                  <span class="checkbox-label">UPI Payments</span>
+                </div>
+                
+                <div class="checkbox-item">
+                  <label class="custom-checkbox">
+                    {{ form.supports_cards }}
+                    <span class="checkmark"></span>
+                  </label>
+                  <span class="checkbox-label">Credit/Debit Cards</span>
+                </div>
+                
+                <div class="checkbox-item">
+                  <label class="custom-checkbox">
+                    {{ form.supports_netbanking }}
+                    <span class="checkmark"></span>
+                  </label>
+                  <span class="checkbox-label">Net Banking</span>
+                </div>
+                
+                <div class="checkbox-item">
+                  <label class="custom-checkbox">
+                    {{ form.supports_wallets }}
+                    <span class="checkmark"></span>
+                  </label>
+                  <span class="checkbox-label">Digital Wallets</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-plus mr-2"></i>Add Gateway
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript: Key-Value Rows to JSON -->
+<script>
+function addKVRow(containerId) {
+  const container = document.getElementById(containerId + '-container');
+  const row = document.createElement('div');
+  row.className = 'input-group input-group-sm mb-2 kv-row';
+
+  row.innerHTML = `
+    <input type="text" class="form-control" placeholder="Key" required>
+    <input type="text" class="form-control" placeholder="Value" required>
+    <div class="input-group-append">
+      <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.parentElement.remove();">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  `;
+  container.appendChild(row);
+}
+
+function collectJSON(containerId, textareaId) {
+  const rows = document.querySelectorAll(`#${containerId}-container .kv-row`);
+  const obj = {};
+  rows.forEach(row => {
+    const key = row.querySelector('input:nth-child(1)').value.trim();
+    const val = row.querySelector('input:nth-child(2)').value.trim();
+    if (key) obj[key] = val;
+  });
+  document.getElementById(textareaId).value = JSON.stringify(obj);
+}
+
+// On submit: convert to JSON
+document.getElementById('gatewayForm').addEventListener('submit', function(e) {
+  collectJSON('credentials', 'credentials-json');
+  collectJSON('config', 'config-json');
+
+  if (!this.checkValidity()) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  this.classList.add('was-validated');
+});
+
+// Auto-add one row for credentials on load
+window.addEventListener('load', () => {
+  addKVRow('credentials');
+});
+
+// Enhance checkbox styling
+document.addEventListener('DOMContentLoaded', function() {
+  // Style existing checkboxes
+  const checkboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]');
+  checkboxes.forEach(checkbox => {
+    // Hide default checkbox and use our custom one
+    checkbox.style.display = 'none';
+  });
+});
+</script>
+
+<!-- Bootstrap Validation -->
+<script>
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    var forms = document.getElementsByClassName('needs-validation');
+    Array.prototype.forEach.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  });
+})();
+</script>
+
+{% endblock content %}
