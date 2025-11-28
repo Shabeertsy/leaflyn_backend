@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-%jo%_(otet%)*#5p+wz3!w^o=_*s3b8fu$u7*$4@x#utt!cgqw
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['16.171.4.2', 'crdrops.xyz', 'www.crdrops.xyz','127.0.0.1','backend.crdrops.xyz','192.168.1.13','localhost']
+ALLOWED_HOSTS = ['13.232.13.14', 'crdrops.xyz', 'www.crdrops.xyz','127.0.0.1','backend.crdrops.xyz','192.168.1.13','localhost']
 
 
 # Application definition
@@ -98,23 +98,23 @@ WSGI_APPLICATION = 'leafin_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'leafin',
-        'USER': 'myuser',
-        'PASSWORD': '123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'leafin',
+#         'USER': 'myuser',
+#         'PASSWORD': '123',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation
