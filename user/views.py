@@ -17,19 +17,35 @@ class CustomPageNumberPagination(PageNumberPagination):
 class CategoryListAPIView(APIView):
     def get(self, request): 
         try:
-            categories = Categories.objects.all()
+            categories = Categories.objects.filter(active_status=True)
             serializer = CategorySerializer(categories, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ProductCollectionListAPIView(APIView):
+    def get(self, request):
+        try:
+            products = ProductVariant.objects.filter(active_status=True)
+            featured_products = products.filter(is_featured_collection=True)
+            bestseller_products = products.filter(is_bestseller=True)   
+            featured_serializer = ProductVariantSerializer(featured_products, many=True)
+            bestseller_serializer = ProductVariantSerializer(bestseller_products, many=True)
+
+            response_data = {
+                "featured_products": featured_serializer.data,
+                "bestseller_products": bestseller_serializer.data
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProductListAPIView(APIView):
     def get(self, request):
         try:
-            products = ProductVariant.objects.filter()
+            products = ProductVariant.objects.filter(active_status=True)
 
             sizes = request.query_params.getlist('size')
             colors = request.query_params.getlist('color')

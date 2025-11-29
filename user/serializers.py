@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Product, ProductVariant, CareGuide, Categories
+from .models import ProductImage
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -30,9 +31,20 @@ class CareGuideSerializer(serializers.ModelSerializer):
         ]
         depth = 1
 
+class ProductVariantImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = [
+            'uuid',
+            'image',
+            'created_at',
+            'updated_at',
+        ]
+
 
 class ProductVariantSerializer(serializers.ModelSerializer):
     care_guides = CareGuideSerializer(many=True, read_only=True)
+    images = ProductVariantImageSerializer(many=True, read_only=True)
     
     class Meta:
         model = ProductVariant
@@ -52,6 +64,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'water',
             'growth_rate',
             'care_guides',
+            'images',  
             'created_at',
             'updated_at',
         ]

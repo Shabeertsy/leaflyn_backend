@@ -126,6 +126,8 @@ class ProductVariant(BaseModel):
     light = models.CharField(max_length=100, blank=True, null=True, verbose_name="Light")
     water = models.CharField(max_length=100, blank=True, null=True, verbose_name="Water")
     growth_rate = models.CharField(max_length=100, blank=True, null=True, verbose_name="Growth Rate")
+    is_featured_collection = models.BooleanField(default=False, db_index=True, verbose_name="Is Featured Collection")
+    is_bestseller = models.BooleanField(default=False, db_index=True, verbose_name="Is Bestseller")
 
     class Meta:
         indexes = [

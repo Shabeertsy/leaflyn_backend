@@ -44,7 +44,9 @@ class ProductVariantForm(forms.ModelForm):
             'pot_size',
             'light',
             'water',
-            'growth_rate'
+            'growth_rate',
+            'is_bestseller',
+            'is_featured_collection'
         ]
         
     def __init__(self, *args, **kwargs):
@@ -58,6 +60,8 @@ class ProductVariantForm(forms.ModelForm):
         self.fields['light'].required = False
         self.fields['water'].required = False
         self.fields['growth_rate'].required = False
+        self.fields['is_bestseller'].required = False
+        self.fields['is_featured_collection'].required = False
 
 
 class CareGuideForm(forms.ModelForm):

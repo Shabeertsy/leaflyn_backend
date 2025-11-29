@@ -557,6 +557,8 @@
                 <th scope="col">Price</th>
                 <th scope="col">Discounted Price</th>
                 <th scope="col">Discount </th>
+                <th scope="col">Bestseller</th>
+                <th scope="col">Featured</th>
                 <th scope="col">Actions</th>
               </tr>
             </thead>
@@ -596,6 +598,20 @@
                     <span class="text-muted">No Discount</span>
                   {% endif %}
                 </td>
+                <td class="text-center">
+                {% if variant.is_bestseller %}
+                  <i class="fas fa-check-circle text-success" title="Bestseller"></i>
+                {% else %}
+                  <i class="fas fa-times-circle text-muted" title="Not Bestseller"></i>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if variant.is_featured_collection %}
+                  <i class="fas fa-check-circle text-success" title="Featured"></i>
+                {% else %}
+                  <i class="fas fa-times-circle text-muted" title="Not Featured"></i>
+                {% endif %}
+              </td>
                 <td class="action-btns">
                   <button type="button"
                           class="btn btn-sm btn-primary"
@@ -731,6 +747,22 @@
                                    min="0">
                           </div>
                         </div>
+                        <!-- Bestseller and Featured Checkboxes -->
+                          <div class="row">
+                            <div class="col-md-6 mb-4">
+                              <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="edit_variant_bestseller_{{ variant.id }}" name="is_bestseller" {% if variant.is_bestseller %}checked{% endif %}>
+                                <label class="custom-control-label" for="edit_variant_bestseller_{{ variant.id }}">Mark as Bestseller</label>
+                              </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                              <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="edit_variant_featured_{{ variant.id }}" name="is_featured_collection" {% if variant.is_featured_collection %} checked {% endif %}>
+                                <label class="custom-control-label" for="edit_variant_featured_{{ variant.id }}">Mark as Featured Collection</label>
+                            
+                              </div>
+                            </div>
+                          </div>
                         <!-- Multiple Images Upload for Edit -->
                         <div class="mb-4">
                           <label class="form-label">Product Variant Images</label>
@@ -754,6 +786,8 @@
                           <div class="form-text">You can upload multiple images. Click the + icon to add.</div>
                         </div>
                       </div>
+
+
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Update Variant</button>
@@ -909,6 +943,24 @@
               <input type="number" class="form-control" id="variant_offer" name="offer" placeholder="Enter offer value" step="0.01" min="0" value="0">
             </div>
           </div>
+
+          <!-- Bestseller and Featured Checkboxes -->
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="variant_bestseller" name="is_bestseller">
+                <label class="custom-control-label" for="variant_bestseller">Mark as Bestseller</label>
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="variant_featured" name="is_featured_collection">
+                <label class="custom-control-label" for="variant_featured">Mark as Featured Collection</label>
+              </div>
+            </div>
+          </div>
+
+
           <!-- Multiple Images Upload -->
           <div class="mb-4">
             <label class="form-label">Product Variant Images</label>
