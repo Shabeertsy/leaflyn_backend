@@ -39,6 +39,7 @@ class ProductVariantForm(forms.ModelForm):
             'price', 
             'variant',
             'offer_type', 
+            'description',
             'offer',
             'height',
             'pot_size',

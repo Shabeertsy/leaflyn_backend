@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Product, ProductVariant, CareGuide, Categories
 from .models import ProductImage
+from decimal import Decimal
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -8,6 +9,7 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Categories
         fields = [
             'uuid',
+            'id',
             'category_name',
             'icon',
             'created_at',
@@ -45,7 +47,11 @@ class ProductVariantImageSerializer(serializers.ModelSerializer):
 class ProductVariantSerializer(serializers.ModelSerializer):
     care_guides = CareGuideSerializer(many=True, read_only=True)
     images = ProductVariantImageSerializer(many=True, read_only=True)
-    
+    price= serializers.SerializerMethodField()
+    original_price= serializers.SerializerMethodField()
+    offer_percentage= serializers.SerializerMethodField()    
+    name= serializers.SerializerMethodField()
+
     class Meta:
         model = ProductVariant
         fields = [
@@ -53,6 +59,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'product',
             'color',
             'size',
+            'original_price',
             'stock',
             'price',
             'variant',
@@ -60,10 +67,12 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'offer',
             'height',
             'pot_size',
+            'offer_percentage',
             'light',
             'water',
             'growth_rate',
             'care_guides',
+            'name',
             'images',  
             'created_at',
             'updated_at',
@@ -71,3 +80,36 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
         depth = 1
 
+    def get_price(self, obj):
+        offer_value = Decimal(str(obj.offer)) if obj.offer is not None else Decimal('0.00')
+        
+        if obj.offer_type == 'amount':
+            calculated_price = obj.price - offer_value
+        elif obj.offer_type == 'percentage':
+            percent_decimal = offer_value / Decimal('100.00')
+            calculated_price = obj.price - (obj.price * percent_decimal)
+        else:
+            calculated_price = obj.price
+        return max(Decimal('0.00'), calculated_price)
+
+
+    def get_original_price(self, obj):
+        return obj.price
+
+
+    def get_offer_percentage(self, obj):
+        offer_value = Decimal(str(obj.offer)) if obj.offer is not None else Decimal('0.00')
+        product_price = obj.price if obj.price is not None else Decimal('0.00')
+
+        if offer_value == Decimal('0.00') or product_price == Decimal('0.00'):
+            return Decimal('0.00')
+
+        if obj.offer_type == 'percentage':
+            return offer_value
+        elif obj.offer_type == 'amount':
+            return (offer_value / product_price) * Decimal('100.00')
+        else:
+            return Decimal('0.00')
+
+    def get_name(self, obj):
+        return  f"{obj.product.name} {obj.variant}"

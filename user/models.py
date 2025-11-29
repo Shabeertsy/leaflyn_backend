@@ -97,7 +97,6 @@ class Product(BaseModel):
     category = models.ForeignKey(Categories, on_delete=models.CASCADE, related_name='products', db_index=True, verbose_name="Category")
     name = models.CharField(max_length=255, db_index=True, verbose_name="Product Name")
     title = models.CharField(max_length=255, blank=True, null=True, db_index=True, verbose_name="Product Title")
-    description = models.TextField(blank=True, verbose_name="Description")
     base_price = models.DecimalField(max_digits=10, decimal_places=2, db_index=True, verbose_name="Base Price",null=True,blank=True)
 
     class Meta:
@@ -121,6 +120,7 @@ class ProductVariant(BaseModel):
     variant =  models.CharField(max_length=255, null=True,blank=True)
     offer_type = models.CharField(max_length=255, null=True, choices=[('percentage', 'Percentage'), ('amount', 'Amount')], db_index=True, verbose_name="Offer Type")
     offer = models.FloatField(default=0.0, db_index=True, verbose_name="Offer Value")
+    description = models.TextField(blank=True, verbose_name="Description")
     height = models.CharField(max_length=100, blank=True, null=True, verbose_name="Height")
     pot_size = models.CharField(max_length=100, blank=True, null=True, verbose_name="Pot Size")
     light = models.CharField(max_length=100, blank=True, null=True, verbose_name="Light")

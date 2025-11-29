@@ -568,16 +568,14 @@ class ProductVariantCreateView(View):
     def post(self, request):
         form = ProductVariantForm(request.POST)
         images = request.FILES.getlist('variant_images')
-        print("FILES:", request.FILES)
-        print("FILES LIST:", request.FILES.getlist("variant_images"))
-
+       
         if form.is_valid():
             product = form.cleaned_data.get('product')
             size = form.cleaned_data.get('size')
             variant_name = form.cleaned_data.get('variant')
 
             # Check for existing variant with same product and size (color is optional now)
-            if ProductVariant.objects.filter(product=product, size=size).exists():
+            if ProductVariant.objects.filter(product=product, size=size,variant=variant_name).exists():
                 messages.error(request, "Variant with these attributes already exists.", extra_tags="variant-error")
                 return redirect('product_variants')
 
@@ -606,7 +604,8 @@ class ProductVariantEditView(View):
             # Check for existing variant with same product and size (excluding current variant)
             if ProductVariant.objects.filter(
                 product=product,
-                size=size
+                size=size,
+                variant=variant_name
             ).exclude(pk=pk).exists():
                 messages.error(request, "Another variant with these attributes already exists.", extra_tags="variant-error")
                 return redirect('product_variants')

@@ -747,6 +747,13 @@
                                    min="0">
                           </div>
                         </div>
+                        <div class="form-group mb-3">
+                          <label for="edit_variant_description_{{ variant.id }}">Description</label>
+                          <textarea class="form-control"
+                                 id="edit_variant_description_{{ variant.id }}"
+                                 name="description"
+                                 placeholder="Enter variant description">{{ variant.description|default_if_none:'' }}</textarea>
+                        </div>
                         <!-- Bestseller and Featured Checkboxes -->
                           <div class="row">
                             <div class="col-md-6 mb-4">
@@ -942,6 +949,10 @@
               <label for="variant_offer" class="form-label">Offer Value</label>
               <input type="number" class="form-control" id="variant_offer" name="offer" placeholder="Enter offer value" step="0.01" min="0" value="0">
             </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="variant_description">Description</label>
+            <textarea class="form-control" id="variant_description" name="description" placeholder="Enter variant description"></textarea>
           </div>
 
           <!-- Bestseller and Featured Checkboxes -->

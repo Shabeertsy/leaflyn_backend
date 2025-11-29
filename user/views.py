@@ -48,13 +48,10 @@ class ProductListAPIView(APIView):
             products = ProductVariant.objects.filter(active_status=True)
 
             sizes = request.query_params.getlist('size')
-            colors = request.query_params.getlist('color')
             category_id = request.query_params.get('category_id')
 
             if sizes:
                 products = products.filter(size__in=sizes)
-            if colors:
-                products = products.filter(color__in=colors)
             if category_id:
                 products = products.filter(product__category_id=category_id)
 

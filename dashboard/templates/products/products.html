@@ -164,13 +164,6 @@
                                  value="{{ product.title|default_if_none:'' }}"
                                  placeholder="Enter product title">
                         </div>
-                        <div class="form-group mb-3">
-                          <label for="edit_product_description_{{ product.id }}">Description</label>
-                          <textarea class="form-control"
-                                 id="edit_product_description_{{ product.id }}"
-                                 name="description"
-                                 placeholder="Enter product description">{{ product.description|default_if_none:'' }}</textarea>
-                        </div>
                         
                       </div>
                       <div class="modal-footer">
@@ -282,12 +275,7 @@
           <div class="form-group mb-3">
             <label for="product_title">Title</label>
             <input type="text" class="form-control" id="product_title" name="title" placeholder="Enter product title">
-          </div>
-          <div class="form-group mb-3">
-            <label for="product_description">Description</label>
-            <textarea class="form-control" id="product_description" name="description" placeholder="Enter product description"></textarea>
-          </div>
-         
+          </div>       
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancel</button>
