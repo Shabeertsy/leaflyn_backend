@@ -10,5 +10,9 @@ urlpatterns = [
 
     path('categories/', views.CategoryListAPIView.as_view(), name='categories'),
     path('product-collection/', views.ProductCollectionListAPIView.as_view(), name='product-collection'),
+
+    path('contact-us/', views.ContactUsAPIView.as_view(), name='contact-us-api'),
+    path('terms-condition/', views.TermsConditionAPIView.as_view(), name='terms-condition-api'),
+    path('company-contact/', views.CompanyContactAPIView.as_view(), name='company-contact-api'),
     
 ]

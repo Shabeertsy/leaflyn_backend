@@ -19,6 +19,9 @@ class ContactUs(BaseModel):
     email = models.EmailField()
     phone = models.CharField(max_length=20)
     content = models.TextField()
+    subject = models.CharField(max_length=100,blank=True,null=True)
+    reply = models.TextField(blank=True, null=True)
+    is_replied = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Contact Us"

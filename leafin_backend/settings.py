@@ -98,23 +98,23 @@ WSGI_APPLICATION = 'leafin_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'leafin',
-        'USER': 'myuser',
-        'PASSWORD': '123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'leafin',
+#         'USER': 'myuser',
+#         'PASSWORD': '123',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation
@@ -227,19 +227,42 @@ SIMPLE_JWT = {
 
 # Email Configuration for OTP
 # For development - prints emails to console
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# settings.py
 
-# For production - use SMTP
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP server
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
-DEFAULT_FROM_EMAIL = 'noreply@leafin.com'
+# Email Backend
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# SMTP Settings (Gmail Example – works 100% in 2025)
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False  # Do not enable both TLS and SSL
+
+EMAIL_HOST_USER = "your-real-email@gmail.com"
+EMAIL_HOST_PASSWORD = "your-16-digit-app-password"
+
+# Default sender (appears in user's inbox)
+DEFAULT_FROM_EMAIL = "Leafin Support <noreply@leafin.com>"
+
+# Optional: Friendly name for server emails (admin emails)
+# SERVER_EMAIL = "Leafin System <system@leafin.com>"
+
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Production tip: Use environment variables (never hardcode in Git!)
 
 # SMS Configuration (Optional - for SMS OTP)
 # Add your SMS provider credentials here
 # TWILIO_ACCOUNT_SID = 'your-account-sid'
 # TWILIO_AUTH_TOKEN = 'your-auth-token'
 # TWILIO_PHONE_NUMBER = 'your-twilio-phone-number'
+
+
+import ssl
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context

@@ -94,6 +94,22 @@ urlpatterns = [
 
     ## Contact us
     path('contact-us/', views.ContactUsListView.as_view(), name='contact_us'),
+    path('contact-us/reply/<int:pk>/', views.ReplyContactUsView.as_view(), name='reply_contact_us'),
+    path('contact-us/delete/<int:pk>/', views.ContactUsDeleteView.as_view(), name='contact_delete'),
+
+
+    ## Payment
+    path('payment-gateway/', views.PaymentGatewayListView.as_view(), name='payment_gateway_list'),
+    path('payment-gateway/add/', views.PaymentGatewayCreateView.as_view(), name='add_payment_gateway'),
+
+    ## Terms and conditions
+    path('terms-conditions/', views.TermsConditionListView.as_view(), name='terms_condition_list'),
+    path('terms-conditions/add/', views.TermsConditionCreateView.as_view(), name='add_term_condition'),
+    path('terms-conditions/edit/<int:pk>/', views.TermsConditionEditView.as_view(), name='edit_term_condition'),
+    path('terms-conditions/delete/<int:pk>/', views.TermsConditionDeleteView.as_view(), name='delete_term_condition'),
+
+    ## Contact us
+    path('contact-us/', views.ContactUsListView.as_view(), name='contact_us'),
     path('contact-us/delete/<int:pk>/', views.ContactUsDeleteView.as_view(), name='contact_delete'),
 
 

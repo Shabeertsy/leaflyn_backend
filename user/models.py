@@ -15,6 +15,15 @@ class CompanyContact(BaseModel):
     company_city = models.CharField(max_length=255, blank=True, null=True, verbose_name="Company City")
     company_state = models.CharField(max_length=255, blank=True, null=True, verbose_name="Company State")
     company_zip = models.CharField(max_length=20, blank=True, null=True, verbose_name="Company Zip")
+    instagram = models.CharField(max_length=255, blank=True, null=True, verbose_name="Instagram")
+    facebook = models.CharField(max_length=255, blank=True, null=True, verbose_name="Facebook")
+    twitter = models.CharField(max_length=255, blank=True, null=True, verbose_name="Twitter")
+    linkedin = models.CharField(max_length=255, blank=True, null=True, verbose_name="LinkedIn") 
+    youtube = models.CharField(max_length=255, blank=True, null=True, verbose_name="Youtube")
+    tiktok = models.CharField(max_length=255, blank=True, null=True, verbose_name="Tiktok")
+    whatsapp = models.CharField(max_length=255, blank=True, null=True, verbose_name="Whatsapp")
+    telegram = models.CharField(max_length=255, blank=True, null=True, verbose_name="Telegram")
+    
 
     class Meta:
         verbose_name = "Company Contact"

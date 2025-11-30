@@ -557,6 +557,7 @@
                 <th scope="col">Price</th>
                 <th scope="col">Discounted Price</th>
                 <th scope="col">Discount </th>
+                <th scope="col">Specs</th>
                 <th scope="col">Bestseller</th>
                 <th scope="col">Featured</th>
                 <th scope="col">Actions</th>
@@ -579,7 +580,6 @@
                   {% endif %}
                 </td>
                 <td>{{ variant.variant|default:"—" }}</td>
-
                 <td>{{ variant.stock }}</td>
                 <td>{{ variant.price }}</td>
                 <td>
@@ -597,6 +597,28 @@
                   {% else %}
                     <span class="text-muted">No Discount</span>
                   {% endif %}
+                </td>
+                <td>
+                  <ul class="list-unstyled mb-0 small">
+                    {% if variant.height %}
+                      <li><strong>Height:</strong> {{ variant.height }} cm</li>
+                    {% endif %}
+                    {% if variant.pot_size %}
+                      <li><strong>Pot size:</strong> {{ variant.pot_size }} cm</li>
+                    {% endif %}
+                    {% if variant.light %}
+                      <li><strong>Light:</strong> {{ variant.light }}</li>
+                    {% endif %}
+                    {% if variant.water %}
+                      <li><strong>Water:</strong> {{ variant.water }}</li>
+                    {% endif %}
+                    {% if variant.growth_rate %}
+                      <li><strong>Growth:</strong> {{ variant.growth_rate }}</li>
+                    {% endif %}
+                    {% if not variant.height and not variant.pot_size and not variant.light and not variant.water and not variant.growth_rate %}
+                      <li class="text-muted">—</li>
+                    {% endif %}
+                  </ul>
                 </td>
                 <td class="text-center">
                 {% if variant.is_bestseller %}
@@ -640,7 +662,6 @@
                 </td>
               </tr>
 
-              
               <!-- Edit Variant Modal for this row -->
               <div class="modal fade" id="editVariantModal-{{ variant.id }}" tabindex="-1" aria-labelledby="editVariantModalLabel-{{ variant.id }}" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
@@ -754,22 +775,56 @@
                                  name="description"
                                  placeholder="Enter variant description">{{ variant.description|default_if_none:'' }}</textarea>
                         </div>
-                        <!-- Bestseller and Featured Checkboxes -->
-                          <div class="row">
-                            <div class="col-md-6 mb-4">
-                              <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="edit_variant_bestseller_{{ variant.id }}" name="is_bestseller" {% if variant.is_bestseller %}checked{% endif %}>
-                                <label class="custom-control-label" for="edit_variant_bestseller_{{ variant.id }}">Mark as Bestseller</label>
-                              </div>
+                        <!-- Collapsible Specs Section -->
+                        <button class="btn btn-outline-info mb-3" type="button"
+                                data-toggle="collapse"
+                                data-target="#editVariantSpecs-{{ variant.id }}"
+                                aria-expanded="false"
+                                aria-controls="editVariantSpecs-{{ variant.id }}">
+                          <span class="mr-1"><i class="fas fa-sliders-h"></i></span> Add Specs
+                        </button>
+                        <div class="collapse" id="editVariantSpecs-{{ variant.id }}">
+                          <div class="row mb-3">
+                            <div class="col-md-4">
+                              <label for="edit_variant_height_{{ variant.id }}" class="form-label">Height (cm)</label>
+                              <input type="number" class="form-control" id="edit_variant_height_{{ variant.id }}" name="height" placeholder="Enter height" step="0.01" min="0" value="{{ variant.height|default_if_none:'' }}">
                             </div>
-                            <div class="col-md-6 mb-4">
-                              <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="edit_variant_featured_{{ variant.id }}" name="is_featured_collection" {% if variant.is_featured_collection %} checked {% endif %}>
-                                <label class="custom-control-label" for="edit_variant_featured_{{ variant.id }}">Mark as Featured Collection</label>
-                            
-                              </div>
+                            <div class="col-md-4">
+                              <label for="edit_variant_pot_size_{{ variant.id }}" class="form-label">Pot Size (cm)</label>
+                              <input type="number" class="form-control" id="edit_variant_pot_size_{{ variant.id }}" name="pot_size" placeholder="Enter pot size" step="0.01" min="0" value="{{ variant.pot_size|default_if_none:'' }}">
+                            </div>
+                            <div class="col-md-4">
+                              <label for="edit_variant_light_{{ variant.id }}" class="form-label">Light Requirement</label>
+                              <input type="text" class="form-control" id="edit_variant_light_{{ variant.id }}" name="light" placeholder="e.g., Bright indirect" value="{{ variant.light|default_if_none:'' }}">
                             </div>
                           </div>
+                          <div class="row mb-3">
+                            <div class="col-md-4">
+                              <label for="edit_variant_water_{{ variant.id }}" class="form-label">Watering Frequency</label>
+                              <input type="text" class="form-control" id="edit_variant_water_{{ variant.id }}" name="water" placeholder="e.g., Once a week" value="{{ variant.water|default_if_none:'' }}">
+                            </div>
+                            <div class="col-md-4">
+                              <label for="edit_variant_growth_rate_{{ variant.id }}" class="form-label">Growth Rate</label>
+                              <input type="text" class="form-control" id="edit_variant_growth_rate_{{ variant.id }}" name="growth_rate" placeholder="e.g., Medium" value="{{ variant.growth_rate|default_if_none:'' }}">
+                            </div>
+                          </div>
+                        </div>
+                        <!-- End Collapsible Specs Section -->
+                        <!-- Bestseller and Featured Checkboxes -->
+                        <div class="row">
+                          <div class="col-md-6 mb-4">
+                            <div class="custom-control custom-checkbox">
+                              <input type="checkbox" class="custom-control-input" id="edit_variant_bestseller_{{ variant.id }}" name="is_bestseller" {% if variant.is_bestseller %}checked{% endif %}>
+                              <label class="custom-control-label" for="edit_variant_bestseller_{{ variant.id }}">Mark as Bestseller</label>
+                            </div>
+                          </div>
+                          <div class="col-md-6 mb-4">
+                            <div class="custom-control custom-checkbox">
+                              <input type="checkbox" class="custom-control-input" id="edit_variant_featured_{{ variant.id }}" name="is_featured_collection" {% if variant.is_featured_collection %} checked {% endif %}>
+                              <label class="custom-control-label" for="edit_variant_featured_{{ variant.id }}">Mark as Featured Collection</label>
+                            </div>
+                          </div>
+                        </div>
                         <!-- Multiple Images Upload for Edit -->
                         <div class="mb-4">
                           <label class="form-label">Product Variant Images</label>
@@ -793,8 +848,6 @@
                           <div class="form-text">You can upload multiple images. Click the + icon to add.</div>
                         </div>
                       </div>
-
-
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Update Variant</button>
@@ -838,7 +891,7 @@
               </div>
               {% empty %}
               <tr>
-                <td colspan="8" class="text-center text-muted">No variants found.</td>
+                <td colspan="12" class="text-center text-muted">No variants found.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -954,7 +1007,41 @@
             <label for="variant_description">Description</label>
             <textarea class="form-control" id="variant_description" name="description" placeholder="Enter variant description"></textarea>
           </div>
-
+          <!-- Specs Section Button (Collapsible) -->
+          <button class="btn btn-outline-info mb-3" type="button"
+                  data-toggle="collapse"
+                  data-target="#variantSpecs"
+                  aria-expanded="false"
+                  aria-controls="variantSpecs">
+            <span class="mr-1"><i class="fas fa-sliders-h"></i></span> Add Specs
+          </button>
+          <div class="collapse" id="variantSpecs">
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label for="variant_height" class="form-label">Height (cm)</label>
+                <input type="number" class="form-control" id="variant_height" name="height" placeholder="Enter height" step="0.01" min="0">
+              </div>
+              <div class="col-md-4">
+                <label for="variant_pot_size" class="form-label">Pot Size (cm)</label>
+                <input type="number" class="form-control" id="variant_pot_size" name="pot_size" placeholder="Enter pot size" step="0.01" min="0">
+              </div>
+              <div class="col-md-4">
+                <label for="variant_light" class="form-label">Light Requirement</label>
+                <input type="text" class="form-control" id="variant_light" name="light" placeholder="e.g., Bright indirect">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label for="variant_water" class="form-label">Watering Frequency</label>
+                <input type="text" class="form-control" id="variant_water" name="water" placeholder="e.g., Once a week">
+              </div>
+              <div class="col-md-4">
+                <label for="variant_growth_rate" class="form-label">Growth Rate</label>
+                <input type="text" class="form-control" id="variant_growth_rate" name="growth_rate" placeholder="e.g., Medium">
+              </div>
+            </div>
+          </div>
+          <!-- END Specs Section Button (Collapsible) -->
           <!-- Bestseller and Featured Checkboxes -->
           <div class="row">
             <div class="col-md-6 mb-4">
@@ -970,8 +1057,6 @@
               </div>
             </div>
           </div>
-
-
           <!-- Multiple Images Upload -->
           <div class="mb-4">
             <label class="form-label">Product Variant Images</label>
@@ -1001,6 +1086,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let allFiles = [];
   let allEditFiles = new Map();
 
+  // Automatically show specs in edit modal if fields are present
+  {% for variant in variants %}
+    {% if variant.height or variant.pot_size or variant.light or variant.water or variant.growth_rate %}
+      $('#editVariantSpecs-{{ variant.id }}').collapse('show');
+    {% endif %}
+  {% endfor %}
+
   // Add Variant Modal Image Upload
   const imageAddButton = document.getElementById('imageAddButton');
   const imageInput = document.getElementById('variant_images');
@@ -1011,24 +1103,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     imageInput.addEventListener('change', (event) => {
       const newFiles = Array.from(event.target.files);
-      console.log(`Selected ${newFiles.length} new files`);
-
-      // Add new files to existing array
       allFiles.push(...newFiles);
-
-      // Update the input with ALL files
       const dt = new DataTransfer();
       allFiles.forEach(file => dt.items.add(file));
       imageInput.files = dt.files;
-
-      // Create previews for new files only
       newFiles.forEach(file => {
         if (file.type.startsWith('image/')) {
           createImagePreview(file, imageUploadContainer, imageInput, false);
         }
       });
-
-      console.log(`Total files now: ${allFiles.length}`);
     });
   }
 
@@ -1038,36 +1121,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const editImageContainer = document.getElementById(`imageUploadContainer-edit-${variantId}`);
     if (editImageInput && editImageContainer) {
       allEditFiles.set(variantId, []);
-
       button.addEventListener('click', () => {
         editImageInput.click();
       });
       editImageInput.addEventListener('change', (event) => {
         const newFiles = Array.from(event.target.files);
-        console.log(`Selected ${newFiles.length} new files for variant ${variantId}`);
-
-        // Add new files to existing array for this variant
         const currentFiles = allEditFiles.get(variantId);
         currentFiles.push(...newFiles);
-
-        // Update the input with ALL files for this variant
         const dt = new DataTransfer();
         currentFiles.forEach(file => dt.items.add(file));
         editImageInput.files = dt.files;
-
-        // Create previews for new files only
         newFiles.forEach(file => {
           if (file.type.startsWith('image/')) {
             createImagePreview(file, editImageContainer, editImageInput, true);
           }
         });
-
-        console.log(`Total files for variant ${variantId}: ${currentFiles.length}`);
       });
     }
   });
 
-  // Function to create image preview element
   function createImagePreview(file, container, inputElement, isEdit = false) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -1117,7 +1189,6 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsDataURL(file);
   }
 
-  // Handle removal of existing images in edit modal via AJAX
   document.querySelectorAll('.remove-variant-image-btn').forEach(button => {
     button.addEventListener('click', () => {
       const imageId = button.dataset.imageId;
@@ -1125,7 +1196,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const imageWrapper = button.parentElement;
       const form = button.closest('form');
 
-      // Send AJAX request to delete the image
       fetch(`/delete_variant_image/${imageId}/`, {
         method: 'POST',
         headers: {
@@ -1137,18 +1207,13 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         if (data.success) {
           imageWrapper.remove();
-          console.log(`Image ${imageId} deleted successfully`);
-
           if (form) {
             const deleteInput = document.createElement('input');
             deleteInput.type = 'hidden';
             deleteInput.name = 'delete_images[]';
             deleteInput.value = imageId;
             form.appendChild(deleteInput);
-          } else {
-            console.warn('Form not found for deleted image, hidden input not appended.');
           }
-
           const container = document.getElementById(`imageUploadContainer-edit-${variantId}`);
           if (container) {
             const alert = document.createElement('div');
@@ -1187,7 +1252,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
       .catch(error => {
-        console.error('Error deleting image:', error);
         const container = document.getElementById(`imageUploadContainer-edit-${variantId}`);
         if (container) {
           const alert = document.createElement('div');
@@ -1209,7 +1273,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Form validation
   (() => {
     'use strict';
     const forms = document.querySelectorAll('.needs-validation');
@@ -1224,63 +1287,43 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
-  // Debug form submission
   document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(form => {
     form.addEventListener('submit', (e) => {
       const formData = new FormData(form);
       const imageFiles = formData.getAll('variant_images');
-      console.log(`Form submission - Image files: ${imageFiles.length}`);
-      imageFiles.forEach((file, index) => {
-        console.log(`File ${index + 1}: ${file.name}, Size: ${file.size} bytes`);
-      });
     });
   });
 });
 </script>
 <script>
   let currentVariantId = null;
-
   function openCareGuideModal(variantId, variantName) {
     currentVariantId = variantId;
     document.getElementById('careGuideVariantId').value = variantId;
     document.getElementById('careGuideVariantTitle').textContent = variantName;
-    
-    // Reset form
     document.getElementById('addCareGuideForm').reset();
-    
-    // Show modal
     $('#careGuideModal').modal('show');
-    
-    // Load guides
     loadCareGuides(variantId);
   }
-
   function loadCareGuides(variantId) {
     const listContainer = document.getElementById('careGuidesList');
     listContainer.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>';
-
     fetch(`/variants/${variantId}/care-guides/`)
       .then(response => response.json())
       .then(data => {
-        if (data.success) {
-          renderCareGuides(data.guides);
-        } else {
-          listContainer.innerHTML = '<div class="text-center py-4 text-danger">Failed to load guides.</div>';
-        }
+        if (data.success) renderCareGuides(data.guides);
+        else listContainer.innerHTML = '<div class="text-center py-4 text-danger">Failed to load guides.</div>';
       })
       .catch(error => {
-        console.error('Error:', error);
         listContainer.innerHTML = '<div class="text-center py-4 text-danger">Error loading guides.</div>';
       });
   }
-
   function renderCareGuides(guides) {
     const listContainer = document.getElementById('careGuidesList');
-    if (guides.length === 0) {
+    if (!guides.length) {
       listContainer.innerHTML = '<div class="text-center py-4 text-muted">No care guides added yet.</div>';
       return;
     }
-
     let html = '';
     guides.forEach(guide => {
       html += `
@@ -1297,7 +1340,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <p class="text-sm mb-0 text-muted guide-content">${guide.content || ''}</p>
-          
           <!-- Edit Form (Hidden by default) -->
           <form id="edit-form-${guide.id}" class="d-none mt-3 p-3 bg-secondary rounded" onsubmit="submitEditGuide(event, ${guide.id})">
             <div class="row">
@@ -1327,19 +1369,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     listContainer.innerHTML = html;
   }
-
-  // Add Guide
   document.getElementById('addCareGuideForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
-    
-    // Handle checkbox manually
     if (!document.getElementById('newGuideActive').checked) {
         formData.set('is_active', 'False');
     } else {
         formData.set('is_active', 'True');
     }
-
     fetch(`/variants/${currentVariantId}/care-guides/add/`, {
       method: 'POST',
       body: formData
@@ -1348,36 +1385,28 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(data => {
       if (data.success) {
         this.reset();
-        loadCareGuides(currentVariantId); // Reload list
+        loadCareGuides(currentVariantId);
       } else {
         alert('Failed to add guide: ' + (data.message || 'Unknown error'));
       }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {});
   });
-
-  // Edit Guide UI
   function editGuide(id) {
     document.getElementById(`edit-form-${id}`).classList.remove('d-none');
     document.querySelector(`#guide-${id} .guide-content`).classList.add('d-none');
   }
-
   function cancelEdit(id) {
     document.getElementById(`edit-form-${id}`).classList.add('d-none');
     document.querySelector(`#guide-${id} .guide-content`).classList.remove('d-none');
   }
-
-  // Submit Edit
   function submitEditGuide(e, id) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
-    
-    // Handle checkbox manually
     const checkbox = form.querySelector('input[name="is_active"]');
     formData.set('is_active', checkbox.checked ? 'True' : 'False');
-    formData.append('variant', currentVariantId); // Required by form validation
-
+    formData.append('variant', currentVariantId);
     fetch(`/care-guides/edit/${id}/`, {
       method: 'POST',
       body: formData
@@ -1385,18 +1414,15 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        loadCareGuides(currentVariantId); // Reload list
+        loadCareGuides(currentVariantId);
       } else {
         alert('Failed to update guide: ' + (data.message || 'Unknown error'));
       }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {});
   }
-
-  // Delete Guide
   function deleteGuide(id) {
     if (!confirm('Are you sure you want to delete this care guide?')) return;
-
     fetch(`/care-guides/delete/${id}/`, {
       method: 'POST',
       headers: {
@@ -1406,47 +1432,37 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        loadCareGuides(currentVariantId); // Reload list
+        loadCareGuides(currentVariantId);
       } else {
         alert('Failed to delete guide: ' + (data.message || 'Unknown error'));
       }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {});
   }
-
-  // Template Logic
   function loadGuideTemplates() {
     const select = document.getElementById('guideTemplateSelect');
-    
     fetch('/care-guides/templates/')
       .then(response => response.json())
       .then(data => {
         if (data.success) {
           let html = '<option value="">-- Select a template --</option>';
           data.templates.forEach((template, index) => {
-            // Store content in data attribute for easy access
-            // Escape quotes in content to prevent HTML breaking
             const safeContent = template.content.replace(/"/g, '&quot;');
             html += `<option value="${index}" data-title="${template.title}" data-content="${safeContent}">${template.title}</option>`;
           });
           select.innerHTML = html;
         }
       })
-      .catch(error => console.error('Error loading templates:', error));
+      .catch(error => {});
   }
-
   function applyGuideTemplate(selectElement) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     if (!selectedOption.value) return;
-
     const title = selectedOption.getAttribute('data-title');
     const content = selectedOption.getAttribute('data-content');
-
     document.getElementById('newGuideTitle').value = title;
     document.getElementById('newGuideContent').value = content;
   }
-
-  // Load templates when page loads (or could be when modal opens)
   document.addEventListener('DOMContentLoaded', loadGuideTemplates);
 </script>
 {% endblock content %}

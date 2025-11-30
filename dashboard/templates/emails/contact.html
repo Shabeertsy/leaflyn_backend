@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style type="text/css">
+    body { font-family: Arial, sans-serif; background:#f6f6f6; margin:0; padding:0; -webkit-text-size-adjust: none; }
+    .container { max-width: 600px; margin: 20px auto; background:#ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .header { background:#4a6fe0; color:white; padding:30px 20px; text-align:center; }
+    .header h1 { margin:0; font-size:24px; }
+    .content { padding:35px; line-height:1.7; color:#333333; font-size:15px; }
+    .content p { margin: 0 0 16px 0; }
+    .reply-box {
+      background:#f8f9fc;
+      border-left: 4px solid #4a6fe0;
+      padding: 18px;
+      margin: 20px 0;
+      font-style: italic;
+      color: #444;
+    }
+    .footer {
+      padding:20px;
+      text-align:center;
+      font-size:12px;
+      color:#888888;
+      background:#f9f9f9;
+    }
+    a { color: #4a6fe0; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <table class="container" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="header">
+        <h1>We've replied to your message</h1>
+      </td>
+    </tr>
+    <tr>
+      <td class="content">
+        <p>Dear {{ user_name }},</p>
+
+        <p>Thank you for contacting us! Here is our reply to your inquiry:</p>
+
+        <div class="reply-box">
+          {{ reply_content|linebreaks }}
+        </div>
+
+        <p>If you have any further questions, feel free to reply to this email or contact us again through our website.</p>
+
+        <p>We’re here to help!</p>
+
+        <p>Best regards,<br>
+        <strong>The {{ company_name }} Support Team</strong></p>
+      </td>
+    </tr>
+    <tr>
+      <td class="footer">
+        © {{ current_year }} {{ company_name }}. All rights reserved.<br>
+        This is an automated message from our support system.
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

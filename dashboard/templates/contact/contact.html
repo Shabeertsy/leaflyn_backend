@@ -74,6 +74,9 @@
                 <th scope="col">#</th>
                 <th scope="col">Name</th>
                 <th scope="col">Email</th>
+                <th scope="col">Phone</th>
+                <th scope="col">Replied</th>
+                <th scope="col">Reply</th>
                 <th scope="col">Subject</th>
                 <th scope="col">Message</th>
                 <th scope="col">Submitted At</th>
@@ -86,6 +89,25 @@
                 <td>{{ forloop.counter0|add:contacts.start_index }}</td>
                 <td>{{ contact.name }}</td>
                 <td>{{ contact.email }}</td>
+                <td>{{ contact.phone }}</td>
+                <td>
+                  {% if contact.is_replied %}
+                    <i class="fas fa-check-circle text-success" title="Replied"></i>
+                  {% else %}
+                    <i class="fas fa-times-circle text-danger" title="Not Replied"></i>
+                  {% endif %}
+                </td>
+                <td>
+                  <button type="button"
+                          class="btn btn-sm btn-info"
+                          title="View Reply"
+                          data-toggle="modal"
+                          data-target="#repliedModal-{{ contact.id }}"
+                          data-bs-toggle="modal"
+                          data-bs-target="#repliedModal-{{ contact.id }}">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
                 <td>{{ contact.subject|default_if_none:"-" }}</td>
                 <td>
                   <button type="button"
@@ -101,7 +123,19 @@
                 <td>
                   {{ contact.created_at|date:"Y-m-d H:i" }}
                 </td>
+        
                 <td class="action-btns">
+
+                  <button type="button"
+                          class="btn btn-sm btn-primary"
+                          title="Reply"
+                          data-toggle="modal"
+                          data-target="#replyModal-{{ contact.id }}"
+                          data-bs-toggle="modal"
+                          data-bs-target="#replyModal-{{ contact.id }}">
+                    <i class="fas fa-reply"></i>
+                  </button>
+
                   <button type="button"
                           class="btn btn-sm btn-danger"
                           title="Delete"
@@ -128,6 +162,51 @@
                         <label>Message</label>
                         <textarea class="form-control" rows="5" readonly>{{ contact.content }}</textarea>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Replied Modal -->
+              <div class="modal fade" id="repliedModal-{{ contact.id }}" tabindex="-1" aria-labelledby="repliedModalLabel-{{ contact.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header justify-content-center" style="background: #C8E6C9;">
+                      <h6 class="modal-title w-100 text-center mb-0" id="repliedModalLabel-{{ contact.id }}">Replied to {{ contact.name }}</h6>
+                      <button type="button" class="close position-absolute" style="right: 1rem; top: 1rem;" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="form-group">
+                        <label>Reply</label>
+                        <textarea class="form-control" rows="5" readonly>{{ contact.reply }}</textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- Reply Modal -->
+              <div class="modal fade" id="replyModal-{{ contact.id }}" tabindex="-1" aria-labelledby="replyModalLabel-{{ contact.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header justify-content-center" style="background: #C8E6C9;">
+                      <h6 class="modal-title w-100 text-center mb-0" id="replyModalLabel-{{ contact.id }}">Reply to {{ contact.name }}</h6>
+                      <button type="button" class="close position-absolute" style="right: 1rem; top: 1rem;" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <form method="post" action="{% url 'reply_contact_us' contact.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                          <label>Reply</label>
+                          <textarea class="form-control" name="reply" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Send Reply</button>
+                      </form>
                     </div>
                   </div>
                 </div>

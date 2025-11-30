@@ -48,6 +48,13 @@ from user.models import Notification
 from payment.models import PaymentGateway
 
 
+## email imports
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+from django.conf import settings    
+
 
 
 class HomeView(AdminPermissionMixin, View):
@@ -1336,6 +1343,65 @@ class ContactUsDeleteView(View):
             messages.error(request, f"Failed to delete contact submission: {str(e)}", extra_tags='contact-error')
         return redirect('contact_us')
 
+
+
+class ReplyContactUsView(View):
+    def post(self, request, pk):
+        try:
+            contact = get_object_or_404(ContactUs, pk=pk) 
+            reply_content = request.POST.get('reply', '').strip()
+
+            if not reply_content:
+                messages.error(request, "Reply content cannot be empty.")
+                return redirect('contact_us')
+
+            # Save reply
+            contact.reply = reply_content
+            contact.is_replied = True
+            contact.replied_at = timezone.now()
+            contact.save()
+
+            # Prepare context for email template
+            context = {
+                'user_name': contact.name.strip() or 'Valued Customer',
+                'reply_content': reply_content,
+                'company_name': getattr(settings, 'COMPANY_NAME', 'Our Company'),
+                'current_year': timezone.now().year,
+            }
+
+            # Render HTML email
+            html_content = render_to_string('emails/contact.html', context)
+            text_content = strip_tags(html_content)  # Plain text fallback
+
+            # Create email
+            subject = f"Re: {contact.subject}" if contact.subject else "Reply from Our Team"
+            from_email = settings.DEFAULT_FROM_EMAIL
+            recipient_list = [contact.email]
+
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=from_email,
+                to=recipient_list,
+                reply_to=[from_email],  # Good practice: allow direct reply
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+
+            messages.success(
+                request,
+                f"Reply sent successfully to {contact.email}",
+                extra_tags='contact-success'
+            )
+        except Exception as e:
+            print(e)
+            messages.error(
+                request,
+                f"Failed to send reply: {str(e)}",
+                extra_tags='contact-error'
+            )
+
+        return redirect('contact_us')
 
 
 ## Payment

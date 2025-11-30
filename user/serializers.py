@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Product, ProductVariant, CareGuide, Categories
 from .models import ProductImage
+from .models import CompanyContact
+from dashboard.models import ContactUs  ,TermsCondition
 from decimal import Decimal
 
 
@@ -43,6 +45,54 @@ class ProductVariantImageSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
 
+
+class ContactUsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactUs
+        fields = [
+            'name',
+            'email',
+            'phone',
+            'content',
+            'subject',
+        ]
+
+
+class TermsConditionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TermsCondition
+        fields = [
+            'title',
+            'content',
+            'created_at',
+            'updated_at',
+        ]
+
+
+class CompanyContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyContact
+        fields = [
+            'uuid',
+            'id',
+            'company_name',
+            'company_email',
+            'company_phone',
+            'company_address',
+            'company_city',
+            'company_state',
+            'company_zip',
+            'instagram',
+            'facebook',
+            'twitter',
+            'linkedin',
+            'youtube',
+            'tiktok',
+            'whatsapp',
+            'telegram',
+            'created_at',
+            'updated_at',
+        ]
 
 class ProductVariantSerializer(serializers.ModelSerializer):
     care_guides = CareGuideSerializer(many=True, read_only=True)
