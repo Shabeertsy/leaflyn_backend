@@ -140,7 +140,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             calculated_price = obj.price - (obj.price * percent_decimal)
         else:
             calculated_price = obj.price
-        return max(Decimal('0.00'), calculated_price)
+        return max(Decimal('0.00'), calculated_price).quantize(Decimal('0.1'))
 
 
     def get_original_price(self, obj):

@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.pagination import PageNumberPagination
 
@@ -20,6 +20,7 @@ class CustomPageNumberPagination(PageNumberPagination):
 
 
 class CategoryListAPIView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request): 
         try:
             categories = Categories.objects.filter(active_status=True)
@@ -30,6 +31,7 @@ class CategoryListAPIView(APIView):
 
 
 class ProductCollectionListAPIView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         try:
             products = ProductVariant.objects.filter(active_status=True)
@@ -48,6 +50,7 @@ class ProductCollectionListAPIView(APIView):
 
 
 class ProductListAPIView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         try:
             products = ProductVariant.objects.filter(active_status=True)
@@ -79,6 +82,7 @@ class ProductListAPIView(APIView):
 
 
 class ProductSingleAPIView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         try:
             uuids = request.query_params.getlist('uuid')
@@ -98,6 +102,7 @@ class ProductSingleAPIView(APIView):
 
 ## contact us api
 class CompanyContactAPIView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         try:
             company_contact = CompanyContact.objects.first()
@@ -107,6 +112,7 @@ class CompanyContactAPIView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class ContactUsAPIView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         try:
             serializer = ContactUsSerializer(data=request.data)
@@ -119,7 +125,8 @@ class ContactUsAPIView(APIView):
 
 
 
-class TermsConditionAPIView(APIView):
+class TermsConditionAPIView(APIView):   
+    permission_classes = [AllowAny]
     def get(self, request):
         try:
             terms = TermsCondition.objects.all()
@@ -127,3 +134,6 @@ class TermsConditionAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+

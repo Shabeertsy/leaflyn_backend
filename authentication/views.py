@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny,IsAuthenticated
 from django.conf import settings
 from datetime import datetime, timedelta
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -25,7 +25,14 @@ class RegisterAPIView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        data = request.data.copy()
+        full_name = data.pop('full_name', '').strip()
+        if full_name:
+            name_parts = full_name.split(' ', 1)
+            data['first_name'] = name_parts[0]
+            data['last_name'] = name_parts[1] if len(name_parts) > 1 else ''
+
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(
@@ -219,3 +226,9 @@ class ResendOTPView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class PersonalInfo(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProfileSerializer
+    
+    def get_object(self):
+        return self.request.user
