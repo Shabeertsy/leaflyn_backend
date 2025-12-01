@@ -239,11 +239,13 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False  # Do not enable both TLS and SSL
 
-EMAIL_HOST_USER = "your-real-email@gmail.com"
-EMAIL_HOST_PASSWORD = "your-16-digit-app-password"
+import os
+
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
 # Default sender (appears in user's inbox)
-DEFAULT_FROM_EMAIL = "Leafin Support <noreply@leafin.com>"
+# DEFAULT_FROM_EMAIL = "Leafin Support <noreply@leafin.com>"
 
 # Optional: Friendly name for server emails (admin emails)
 # SERVER_EMAIL = "Leafin System <system@leafin.com>"
