@@ -30,10 +30,22 @@ urlpatterns = [
     path('resend-otp/', ResendOTPView.as_view(), name='resend-otp'),
 
 
+    # Address
+    path('address-list/', views.ListAddressAPIView.as_view(), name='address-list'),
+    path('address-add/', views.AddressAddAPIView.as_view(), name='address-add'),
+    path('address-update/<str:uuid>/', views.AddressUpdateAPIView.as_view(), name='address-update'),
+    path('address-delete/<str:uuid>/', views.AddressDeleteAPIView.as_view(), name='address-delete'),
+
+
 
     # Product
     path('product-variants/', views.ProductListAPIView.as_view(), name='product-variants'),
     path('product-details/', views.ProductSingleAPIView.as_view(), name='product-details'),
+
+
+    # Service
+    path('service-category/', views.ListServiceCategoryAPIView.as_view(), name='service-category'),
+    path('service-list/', views.ListServiceAPIView.as_view(), name='service-list'),
 
     path('categories/', views.CategoryListAPIView.as_view(), name='categories'),
     path('product-collection/', views.ProductCollectionListAPIView.as_view(), name='product-collection'),

@@ -1,5 +1,5 @@
 from django import forms
-from user.models import Categories, Colors, Coupon, Product, ProductVariant, Sizes, CareGuide
+from user.models import Categories, Colors, Coupon, Product, ProductVariant, Sizes, CareGuide, ServiceCategory, Service, ServiceFeature, ServiceImage
 
 
 
@@ -76,6 +76,31 @@ class CouponForm(forms.ModelForm):
     class Meta:
         model = Coupon
         fields='__all__'
+
+
+class ServiceCategoryForm(forms.ModelForm):
+    class Meta:
+        model = ServiceCategory
+        fields = ['name', 'icon']
+
+
+class ServiceForm(forms.ModelForm):
+    class Meta:
+        model = Service
+        fields = ['category', 'name', 'price', 'image']
+
+
+class ServiceFeatureForm(forms.ModelForm):
+    class Meta:
+        model = ServiceFeature
+        fields = ['name']
+
+
+class ServiceImageForm(forms.ModelForm):
+    class Meta:
+        model = ServiceImage
+        fields = ['image', 'order_by']
+
 
 # payment/forms.py
 from django import forms

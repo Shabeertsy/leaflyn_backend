@@ -19,7 +19,8 @@ from django.http                 import JsonResponse
 # ==== Dashboard App Imports ====
 from dashboard.forms      import (
     CategoriesForm, CouponForm, PaymentGatewayForm, ProductColorForm, ProductForm, 
-    ProductVariantForm, SizeForm, CareGuideForm
+    ProductVariantForm, SizeForm, CareGuideForm, ServiceCategoryForm, ServiceForm, 
+    ServiceFeatureForm, ServiceImageForm
 )
 from dashboard.excel_pdf  import download_excel_dynamic, generate_pdf_dynamic
 from .mixins             import PaginationSearchMixin
@@ -28,7 +29,8 @@ from .models             import ContactUs, TermsCondition
 # ==== User and Authentication App Imports ====
 from user.models           import (
     Categories, Colors, CompanyContact, Coupon, Order, OrderItem, Product, 
-    ProductImage, ProductVariant, Sizes, Wishlist, CareGuide
+    ProductImage, ProductVariant, Sizes, Wishlist, CareGuide, ServiceCategory, 
+    Service, ServiceFeature, ServiceImage
 )
 
 
@@ -1443,3 +1445,188 @@ class PaymentGatewayCreateView(View):
         else:
             messages.error(request, "Please correct the errors below.", extra_tags='gateway-error')
         return redirect('payment_gateway_list')
+
+
+                                        ## SERVICE CATEGORY VIEWS ##
+
+class ServiceCategoryView(PaginationSearchMixin, View):
+    template_name = 'services/category.html'
+    search_fields = ['name']
+    fields = []
+
+    def get(self, request):
+        categories = ServiceCategory.objects.filter()
+        search_query = request.GET.get('q', '').strip()
+        filter_fields = self.get_filter_fields(request)
+        filtered_categories = self.filter_queryset(categories, search_query, filter_fields)
+        categories_page = self.paginate_queryset(request, filtered_categories)
+        return render(request, self.template_name, {
+            'categories': categories_page,
+            'search_query': search_query,
+            'filter_fields': filter_fields,
+        })
+
+
+class ServiceCategoryCreateView(View):
+    def post(self, request):
+        form = ServiceCategoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            if ServiceCategory.objects.filter(name__iexact=name).exists():
+                messages.error(request, "Category with this name already exists.", extra_tags="service-category-error")
+                return redirect('service_category')
+            form.save()
+            messages.success(request, "Category created successfully.", extra_tags="service-category-success")
+            return redirect('service_category')
+
+        messages.error(request, "Category creation failed.", extra_tags="service-category-error")
+        return redirect('service_category')
+
+
+class ServiceCategoryEditView(View):
+    def post(self, request, pk):
+        category = get_object_or_404(ServiceCategory, pk=pk)
+        form = ServiceCategoryForm(request.POST, request.FILES, instance=category)
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            if ServiceCategory.objects.filter(name__iexact=name).exclude(pk=pk).exists():
+                messages.error(request, "Another category with this name already exists.", extra_tags="service-category-error")
+                return redirect('service_category')
+            form.save()
+            messages.success(request, "Category updated successfully.", extra_tags="service-category-success")
+            return redirect('service_category')
+
+        messages.error(request, "Category update failed.", extra_tags="service-category-error")
+        return redirect('service_category')
+
+
+class ServiceCategoryDeleteView(View):
+    def get(self, request, pk):
+        try:
+            category = get_object_or_404(ServiceCategory, pk=pk)
+            category.delete()
+            messages.success(request, "Category deleted successfully.", extra_tags="service-category-success")
+        except Exception as e:
+            messages.error(request, f"Failed to delete category: {str(e)}", extra_tags="service-category-error")
+        return redirect('service_category')
+
+
+                                            ## SERVICES ##
+
+class ServicesView(PaginationSearchMixin, View):
+    template_name = 'services/services.html'
+    search_fields = ['name', 'category__name']
+    fields = []
+
+    def get(self, request):
+        services = Service.objects.select_related('category').all()
+        search_query = request.GET.get('search', '').strip()
+        filter_fields = self.get_filter_fields(request)
+        filtered_services = self.filter_queryset(services, search_query, filter_fields)
+        services_page = self.paginate_queryset(request, filtered_services)
+        return render(request, self.template_name, {
+            'services': services_page,
+            'search_query': search_query,
+            'filter_fields': filter_fields,
+            'categories': ServiceCategory.objects.all(),
+        })
+
+
+class ServiceCreateView(View):
+    def post(self, request):
+        form = ServiceForm(request.POST, request.FILES)
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            if Service.objects.filter(name__iexact=name).exists():
+                messages.error(request, "Service with this name already exists.", extra_tags="service-error")
+                return redirect('services')
+            form.save()
+            messages.success(request, "Service created successfully.", extra_tags="service-success")
+            return redirect('services')
+        print(form.errors)
+        messages.error(request, "Service creation failed.", extra_tags="service-error")
+        return redirect('services')
+
+
+class ServiceEditView(View):
+    def post(self, request, pk):
+        service = get_object_or_404(Service, pk=pk)
+        form = ServiceForm(request.POST, request.FILES, instance=service)
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            if Service.objects.filter(name__iexact=name).exclude(pk=pk).exists():
+                messages.error(request, "Another service with this name already exists.", extra_tags="service-error")
+                return redirect('services')
+            form.save()
+            messages.success(request, "Service updated successfully.", extra_tags="service-success")
+            return redirect('services')
+        messages.error(request, "Service update failed.", extra_tags="service-error")
+        return redirect('services')
+
+class ServiceDeleteView(View):
+    def get(self, request, service_id):
+        try:
+            service = get_object_or_404(Service, pk=service_id)
+            service.delete()
+            messages.success(request, "Service deleted successfully.", extra_tags="service-success")
+        except Exception as e:
+            messages.error(request, f"Failed to delete service: {str(e)}", extra_tags="service-error")
+        return redirect('services')
+
+
+                                        ## SERVICE FEATURES (JSON) ##
+
+class ServiceFeatureListView(View):
+    def get(self, request, service_id):
+        service = get_object_or_404(Service, pk=service_id)
+        features = service.features.all().order_by('-created_at')
+        data = [{'id': f.id, 'name': f.name} for f in features]
+        return JsonResponse({'success': True, 'features': data})
+
+class ServiceFeatureCreateView(View):
+    def post(self, request, service_id):
+        service = get_object_or_404(Service, pk=service_id)
+        form = ServiceFeatureForm(request.POST)
+        if form.is_valid():
+            feature = form.save(commit=False)
+            feature.service = service
+            feature.save()
+            return JsonResponse({'success': True, 'feature': {'id': feature.id, 'name': feature.name}})
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+class ServiceFeatureDeleteView(View):
+    def post(self, request, pk):
+        feature = get_object_or_404(ServiceFeature, pk=pk)
+        feature.delete()
+        return JsonResponse({'success': True})
+
+
+                                        ## SERVICE IMAGES (JSON) ##
+
+class ServiceImageListView(View):
+    def get(self, request, service_id):
+        service = get_object_or_404(Service, pk=service_id)
+        images = service.images.all().order_by('order_by')
+        data = []
+        for i in images:
+            if i.image:
+                data.append({'id': i.id, 'url': i.image.url, 'order_by': i.order_by})
+        return JsonResponse({'success': True, 'images': data})
+
+class ServiceImageCreateView(View):
+    def post(self, request, service_id):
+        service = get_object_or_404(Service, pk=service_id)
+        form = ServiceImageForm(request.POST, request.FILES)
+        if form.is_valid():
+            image = form.save(commit=False)
+            image.service = service
+            image.save()
+            return JsonResponse({'success': True, 'image': {'id': image.id, 'url': image.image.url, 'order_by': image.order_by}})
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+class ServiceImageDeleteView(View):
+    def post(self, request, pk):
+        image = get_object_or_404(ServiceImage, pk=pk)
+        image.delete()
+        return JsonResponse({'success': True})
+

@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.pagination import PageNumberPagination
 
 
-from .models import Product, ProductVariant, CareGuide, Categories
+from .models import Product, ProductVariant, CareGuide, Categories, ShippingAddress
 from .serializers import *
 
 from dashboard.models import ContactUs, TermsCondition
@@ -137,3 +137,77 @@ class TermsConditionAPIView(APIView):
 
 
 
+
+## address management
+class ListAddressAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        try:
+            addresses = ShippingAddress.objects.filter(user=request.user)
+            serializer = AddressSerializer(addresses, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddressAddAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        try:
+            serializer = AddressSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(user=request.user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+class AddressUpdateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def patch(self, request, uuid):
+        try:
+            address = ShippingAddress.objects.get(uuid=uuid,user=request.user)
+            serializer = AddressSerializer(address, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class AddressDeleteAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def delete(self, request, uuid):
+        try:
+            address = ShippingAddress.objects.get(uuid=uuid,user=request.user)
+            address.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+## Service Management
+class ListServiceCategoryAPIView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        try:
+            categories = ServiceCategory.objects.filter(active_status=True)
+            serializer = ServiceCategorySerializer(categories, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListServiceAPIView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        try:
+            services = Service.objects.filter(active_status=True)
+            serializer = ServiceSerializer(services, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    

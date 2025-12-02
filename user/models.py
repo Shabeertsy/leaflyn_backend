@@ -37,17 +37,22 @@ class CompanyContact(BaseModel):
 class ShippingAddress(BaseModel):
     user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='shipping_addresses', db_index=True, verbose_name="User")
     address_line_1 = models.CharField(max_length=255, verbose_name="Address Line 1")
-    address_line_2 = models.CharField(max_length=255, blank=True, verbose_name="Address Line 2")
+    address_line_2 = models.CharField(max_length=255, blank=True,null=True, verbose_name="Address Line 2")
+    building_name_or_number = models.CharField(max_length=255, blank=True,null=True, verbose_name="Building Name or Number")
+    place=models.CharField(max_length=255, blank=True,null=True, verbose_name="Place")
+    district=models.CharField(max_length=255, blank=True,null=True, verbose_name="District")
     city = models.CharField(max_length=100, db_index=True, verbose_name="City")
     state = models.CharField(max_length=100, db_index=True, verbose_name="State")
-    postal_code = models.CharField(max_length=20, db_index=True, verbose_name="Postal Code")
+    pin_code = models.CharField(max_length=20, db_index=True, verbose_name="Postal Code")
     country = models.CharField(max_length=100, db_index=True, verbose_name="Country")
     phone_number = models.CharField(max_length=15, blank=True, verbose_name="Phone Number")
+    address_type = models.CharField(max_length=10, choices=[('home', 'Home'), ('office', 'Office'), ('other', 'Other')], default='home', verbose_name="Address Type")
+    is_default = models.BooleanField(default=False, verbose_name="Is Default")
 
     class Meta:
         indexes = [
             models.Index(fields=['user', 'city']),
-            models.Index(fields=['postal_code', 'country']),
+            models.Index(fields=['pin_code', 'country']),
         ]
         verbose_name = "Shipping Address"
         verbose_name_plural = "Shipping Addresses"
@@ -200,6 +205,92 @@ class ProductImage(BaseModel):
     def __str__(self):
         return f"Image for {self.variant}"
 
+
+class ServiceCategory(BaseModel):
+    name = models.CharField(max_length=255, db_index=True, verbose_name="Service Category Name")
+    icon = models.ImageField(upload_to='service_category_icons/', blank=True, null=True, verbose_name="Service Category Icon")
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['name']),
+        ]
+        verbose_name = "Service Category"
+        verbose_name_plural = "Service Categories"
+    
+    def __str__(self):
+        return self.name
+
+
+class Service(BaseModel):
+    category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name='services', db_index=True, verbose_name="Service Category")
+    name = models.CharField(max_length=255, db_index=True, verbose_name="Service Name")
+    description = models.TextField(blank=True, null=True, verbose_name="Service Description")
+    price = models.DecimalField(max_digits=10, decimal_places=2, db_index=True, verbose_name="Service Price",default=0)
+    image = models.ImageField(upload_to='service_images/', blank=True, null=True, verbose_name="Service Image")
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['category', 'name']),
+            models.Index(fields=['price']),
+        ]
+        verbose_name = "Service"
+        verbose_name_plural = "Services"
+    
+    def __str__(self):
+        return self.name
+
+class ServiceFeature(BaseModel):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='features', db_index=True, verbose_name="Service")
+    name = models.CharField(max_length=255, db_index=True, verbose_name="Feature Name")
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['service', 'name']),
+        ]
+        verbose_name = "Service Feature"
+        verbose_name_plural = "Service Features"
+    
+    def __str__(self):
+        return self.name
+
+
+class ServiceImage(BaseModel):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='images', db_index=True, verbose_name="Service")
+    image = models.ImageField(upload_to='service_images/', blank=True, null=True, verbose_name="Service Image")
+    order_by = models.IntegerField(default=1, db_index=True, verbose_name="Display Order")
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['service', 'order_by']),
+        ]
+        verbose_name = "Service Image"
+        verbose_name_plural = "Service Images"
+    
+    def __str__(self):
+        return f"Image for {self.service.name}"
+
+
+class ServiceBooking(BaseModel):
+    class BookingStatus(models.TextChoices):
+        PENDING = 'PENDING', 'Pending'
+        CONFIRMED = 'CONFIRMED', 'Confirmed'
+        CANCELLED = 'CANCELLED', 'Cancelled'
+
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='service_bookings', db_index=True, verbose_name="User")
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='bookings', db_index=True, verbose_name="Service")
+    booking_date = models.DateTimeField(db_index=True, verbose_name="Booking Date")
+    status = models.CharField(max_length=20, choices=BookingStatus.choices, default=BookingStatus.PENDING, db_index=True, verbose_name="Booking Status")
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'service', 'booking_date']),
+            models.Index(fields=['status']),
+        ]
+        verbose_name = "Service Booking"
+        verbose_name_plural = "Service Bookings"
+    
+    def __str__(self):
+        return f"Booking for {self.service.name} by {self.user.email}"
 
 class Cart(BaseModel):
     user = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='cart', db_index=True, verbose_name="User")

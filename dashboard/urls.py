@@ -120,5 +120,27 @@ urlpatterns = [
 
 
 
+    ## Service Categories
+    path('service-category/', views.ServiceCategoryView.as_view(), name='service_category'),
+    path('service-category/add/', views.ServiceCategoryCreateView.as_view(), name='add_service_category'),
+    path('service-category/edit/<int:pk>/', views.ServiceCategoryEditView.as_view(), name='service_category_edit'),
+    path('service-category/delete/<int:pk>/', views.ServiceCategoryDeleteView.as_view(), name='service_category_delete'),
+
+    ## Services
+    path('services/', views.ServicesView.as_view(), name='services'),
+    path('services/add/', views.ServiceCreateView.as_view(), name='add_service'),
+    path('services/edit/<int:pk>/', views.ServiceEditView.as_view(), name='edit_service'),
+    path('services/delete/<int:service_id>/', views.ServiceDeleteView.as_view(), name='delete_service'),
+
+    # Service Features
+    path('services/<int:service_id>/features/', views.ServiceFeatureListView.as_view(), name='service_feature_list'),
+    path('services/<int:service_id>/features/add/', views.ServiceFeatureCreateView.as_view(), name='add_service_feature'),
+    path('features/delete/<int:pk>/', views.ServiceFeatureDeleteView.as_view(), name='delete_service_feature'),
+
+    # Service Images
+    path('services/<int:service_id>/images/', views.ServiceImageListView.as_view(), name='service_image_list'),
+    path('services/<int:service_id>/images/add/', views.ServiceImageCreateView.as_view(), name='add_service_image'),
+    path('service-images/delete/<int:pk>/', views.ServiceImageDeleteView.as_view(), name='delete_service_image'),
+
     path('icons/', views.IconsView.as_view(), name='icons'),
 ]

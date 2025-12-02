@@ -4,6 +4,8 @@ from .models import ProductImage
 from .models import CompanyContact
 from dashboard.models import ContactUs  ,TermsCondition
 from decimal import Decimal
+from .models import ShippingAddress,ServiceCategory,Service,ServiceFeature,ServiceImage
+
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -19,6 +21,26 @@ class CategorySerializer(serializers.ModelSerializer):
         ]
         depth = 1   
 
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShippingAddress
+        fields = [
+            'uuid',
+            'address_line_1',
+            'address_line_2',
+            'building_name_or_number',
+            'place',
+            'district',
+            'city',
+            'state',
+            'pin_code',
+            'country',
+            'phone_number',
+            'address_type',
+            'is_default',
+            'created_at',
+            'updated_at',
+        ]
 
 class CareGuideSerializer(serializers.ModelSerializer):
     class Meta:
@@ -163,3 +185,60 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     def get_name(self, obj):
         return  f"{obj.product.name} {obj.variant}"
+
+
+class ServiceCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceCategory
+        fields = [
+            'uuid',
+            'id',
+            'category_name',
+            'icon',
+            'created_at',
+            'updated_at',
+        ]
+        depth = 1
+
+
+class ServiceFeatureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceFeature
+        fields = [
+            'uuid',
+            'id',
+            'name',
+        ]
+
+
+class ServiceImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceImage
+        fields = [
+            'uuid',
+            'id',
+            'image',
+            'order_by',
+        ]
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    features = ServiceFeatureSerializer(many=True, read_only=True)
+    images = ServiceImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Service
+        fields = [
+            'uuid',
+            'id',
+            'category',
+            'name',
+            'description',
+            'price',
+            'image',
+            'features',
+            'images',
+            'created_at',
+            'updated_at',
+        ]
+        depth = 1
