@@ -136,6 +136,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'price',
             'variant',
             'offer_type',
+            'description',
             'offer',
             'height',
             'pot_size',
