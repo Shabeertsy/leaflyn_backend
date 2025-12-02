@@ -194,7 +194,7 @@ class ServiceCategorySerializer(serializers.ModelSerializer):
         fields = [
             'uuid',
             'id',
-            'category_name',
+            'name',
             'icon',
             'created_at',
             'updated_at',
