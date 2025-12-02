@@ -53,7 +53,7 @@ class ProductListAPIView(APIView):
     permission_classes = [AllowAny]
     def get(self, request):
         try:
-            products = ProductVariant.objects.filter(active_status=True)
+            products = ProductVariant.objects.filter(active_status=True).order_by('-id')
 
             sizes = request.query_params.getlist('size')
             category_id = request.query_params.get('category_id')
