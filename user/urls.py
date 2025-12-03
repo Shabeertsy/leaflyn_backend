@@ -42,6 +42,8 @@ urlpatterns = [
     path('product-variants/', views.ProductListAPIView.as_view(), name='product-variants'),
     path('product-details/', views.ProductSingleAPIView.as_view(), name='product-details'),
 
+    path('similar-product/', views.SimilarProductListAPIView.as_view(), name='similar-product'),
+
 
     # Service
     path('service-category/', views.ListServiceCategoryAPIView.as_view(), name='service-category'),
@@ -56,4 +58,12 @@ urlpatterns = [
 
     path('custom-ads/', views.CustomAdListAPIView.as_view(), name='custom-ads-api'),
     
+    # Cart
+    path('cart/', views.CartAPIView.as_view(), name='cart'),
+    path('add-to-cart/', views.AddToCartAPIView.as_view(), name='add-to-cart'),
+    path('remove-from-cart/<str:uuid>/', views.RemoveFromCartAPIView.as_view(), name='remove-from-cart'),
+    path('update-cart-item/<str:uuid>/', views.UpdateCartItemAPIView.as_view(), name='update-cart-item'),
+
+    # Wishlist
+    path('wishlist/', views.WishlistAPIView.as_view(), name='wishlist'),
 ]
