@@ -404,7 +404,7 @@ class CreateCashOnDeliveryOrderAPIView(APIView):
                 return Response({'error': 'Shipping address is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
-                shipping_address = ShippingAddress.objects.get(id=shipping_address_id, user=request.user)
+                shipping_address = ShippingAddress.objects.get(uuid=shipping_address_id, user=request.user)
             except ShippingAddress.DoesNotExist:
                 return Response({'error': 'Shipping address not found.'}, status=status.HTTP_404_NOT_FOUND)
 
