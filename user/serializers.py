@@ -322,11 +322,12 @@ class OrderItemSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at'
         ]
-
+        
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, source='orderitem_set', read_only=True)
+    items = OrderItemSerializer(many=True, read_only=True)
     shipping_address = AddressSerializer(read_only=True)
     user = serializers.StringRelatedField(read_only=True)
+    coupon = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Order
@@ -335,9 +336,10 @@ class OrderSerializer(serializers.ModelSerializer):
             'uuid',
             'user',
             'shipping_address',
-            'payment_type',
             'status',
-            'total_price',
+            'total_amount',
+            'coupon',
+            'coupon_offer',
             'items',
             'created_at',
             'updated_at'
