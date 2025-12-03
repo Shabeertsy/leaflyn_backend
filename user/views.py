@@ -412,7 +412,7 @@ class CreateCashOnDeliveryOrderAPIView(APIView):
 
             # 2. GET USER CART
             try:
-                cart = request.user.profile.cart
+                cart = request.user.cart
             except Cart.DoesNotExist:
                 return Response({'error': 'Cart not found.'}, status=status.HTTP_404_NOT_FOUND)
 
