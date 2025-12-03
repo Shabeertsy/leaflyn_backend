@@ -396,7 +396,7 @@ class CreateCashOnDeliveryOrderAPIView(APIView):
 
     def post(self, request):
         try:
-            profile = request.user.profile
+            profile = request.user
             
             # 1 Validate shipping address
             shipping_address_id = request.data.get('shipping_address_id')
