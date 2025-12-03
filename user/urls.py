@@ -10,6 +10,7 @@ from authentication.views import (
     RegisterAPIView,
     LoginView,
     PersonalInfo,
+    RegisterUserAndAddressAPIView
 )
 
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path('register/', RegisterAPIView.as_view(), name='register_api'),
     path('login/', LoginView.as_view(), name='login_api'),
     path('refresh-token/', TokenRefreshView.as_view(), name='refresh-token_api'),
+    path('register-user-address/', RegisterUserAndAddressAPIView.as_view(), name='register-user-address'),
 
     path('personal-info/', PersonalInfo.as_view(), name='personal-info'),
         
@@ -63,6 +65,8 @@ urlpatterns = [
     path('add-to-cart/', views.AddToCartAPIView.as_view(), name='add-to-cart'),
     path('remove-from-cart/<str:uuid>/', views.RemoveFromCartAPIView.as_view(), name='remove-from-cart'),
     path('update-cart-item/<str:uuid>/', views.UpdateCartItemAPIView.as_view(), name='update-cart-item'),
+
+    path('order/cod/', views.CreateCashOnDeliveryOrderAPIView.as_view(), name='order-cod'),
 
     # Wishlist
     path('wishlist/', views.WishlistAPIView.as_view(), name='wishlist'),

@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.pagination import PageNumberPagination
 
 
-from .models import Product, ProductVariant, CareGuide, Categories, ShippingAddress, Cart, CartItem, Wishlist
+from .models import Order, Product, ProductVariant, CareGuide, Categories, ShippingAddress, Cart, CartItem, Wishlist
 from .serializers import *
 
 from dashboard.models import ContactUs, TermsCondition,CustomAd
@@ -389,4 +389,56 @@ class WishlistAPIView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    
+
+
+
+
+
+class CreateCashOnDeliveryOrderAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            shipping_address_id = request.data.get('shipping_address_id')
+            if not shipping_address_id:
+                return Response({'error': 'Shipping address is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                shipping_address = ShippingAddress.objects.get(id=shipping_address_id, user=request.user)
+            except ShippingAddress.DoesNotExist:
+                return Response({'error': 'Shipping address not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+            cart_items = CartItem.objects.filter(user=request.user)
+            if not cart_items.exists():
+                return Response({'error': 'No items in cart.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create Order
+            order = Order.objects.create(
+                user=request.user,
+                shipping_address=shipping_address,
+                payment_type='COD', 
+                status='Pending'
+            )
+
+            # Create OrderItems and calculate total
+            order_total = 0
+            for cart_item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    product_variant=cart_item.variant,
+                    quantity=cart_item.quantity,
+                    price=cart_item.variant.price,
+                )
+                order_total += cart_item.variant.price * cart_item.quantity
+
+            order.total_price = order_total
+            order.save()
+
+            # Clear cart after order placed
+            cart_items.delete()
+
+            serializer = OrderSerializer(order)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+

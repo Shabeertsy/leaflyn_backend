@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, ProductVariant, CareGuide, Categories
+from .models import Order, OrderItem, Product, ProductVariant, CareGuide, Categories
 from .models import ProductImage
 from .models import CompanyContact
 from dashboard.models import ContactUs, CustomAd  ,TermsCondition
@@ -264,7 +264,7 @@ class CustomAdSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
-        
+
 class CartItemSerializer(serializers.ModelSerializer):
     variant = ProductVariantSerializer(read_only=True)
     
@@ -307,4 +307,38 @@ class WishlistSerializer(serializers.ModelSerializer):
             'variant',
             'created_at',
             'updated_at',
+        ]
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product_variant = ProductVariantSerializer(read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = [
+            'id',
+            'product_variant',
+            'quantity',
+            'price',
+            'created_at',
+            'updated_at'
+        ]
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, source='orderitem_set', read_only=True)
+    shipping_address = AddressSerializer(read_only=True)
+    user = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            'id',
+            'uuid',
+            'user',
+            'shipping_address',
+            'payment_type',
+            'status',
+            'total_price',
+            'items',
+            'created_at',
+            'updated_at'
         ]

@@ -232,3 +232,97 @@ class PersonalInfo(generics.RetrieveUpdateAPIView):
     
     def get_object(self):
         return self.request.user
+
+
+
+
+class RegisterUserAndAddressAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data.copy()
+
+        # Required user fields
+        full_name = data.get('full_name', '').strip()
+        phone_number = data.get('phone_number')
+        email = data.get('email')
+        password = data.get('password')
+
+        # Required address fields
+        address_fields = [
+            'building_name_number',  
+            'place_street',         
+            'city',                 
+            'district',             
+            'state',                
+            'pin_code',             
+        ]
+        address_data = {field: data.get(field) for field in address_fields}
+
+        # Validate required fields
+        required_fields = ['full_name', 'phone_number', 'email', 'password', 'place_street', 'city', 'state', 'pin_code']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            return Response({'error': f"Missing required fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create user
+        User = get_user_model()
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(phone_number=phone_number).exists():
+            return Response({'error': 'Phone number already registered'}, status=status.HTTP_400_BAD_REQUEST)
+
+        name_parts = full_name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        try:
+            user = User.objects.create_user(
+                email=email,
+                phone_number=phone_number,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+        except Exception as e:
+            return Response({'error': 'Unable to create user: {}'.format(str(e))}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create address for user
+        from user.models import ShippingAddress
+
+        shipping_address = ShippingAddress.objects.create(
+            user=user,
+            address_line_1=address_data.get('place_street'),
+            address_line_2=address_data.get('building_name_number', ''),
+            city=address_data.get('city'),
+            district=address_data.get('district', ''),
+            state=address_data.get('state'),
+            pin_code=address_data.get('pin_code'),
+        )
+
+        # Issue JWT tokens
+        refresh = RefreshToken.for_user(user)
+
+        # Serialize user and address
+        user_data = ProfileSerializer(user).data
+        address_serializer_cls = None
+        try:
+            from user.serializers import AddressSerializer
+            address_serializer_cls = AddressSerializer
+        except ImportError:
+            address_serializer_cls = None
+
+        address_data_response = (
+            address_serializer_cls(shipping_address).data if address_serializer_cls else None
+        )
+
+        return Response(
+            {
+                "message": "User and address created successfully.",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": user_data,
+                "address": address_data_response,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
