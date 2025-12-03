@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Product, ProductVariant, CareGuide, Categories
 from .models import ProductImage
 from .models import CompanyContact
-from dashboard.models import ContactUs  ,TermsCondition
+from dashboard.models import ContactUs, CustomAd  ,TermsCondition
 from decimal import Decimal
 from .models import ShippingAddress,ServiceCategory,Service,ServiceFeature,ServiceImage
 
@@ -243,3 +243,23 @@ class ServiceSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         depth = 1
+
+
+class CustomAdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomAd
+        fields = [
+            'id',
+            'title',
+            'image',
+            'target_url',
+            'ad_type',
+            'start_date',
+            'end_date',
+            'priority',
+            'is_active',
+            'created_at',
+            'description'
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']

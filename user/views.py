@@ -9,8 +9,7 @@ from rest_framework.pagination import PageNumberPagination
 from .models import Product, ProductVariant, CareGuide, Categories, ShippingAddress
 from .serializers import *
 
-from dashboard.models import ContactUs, TermsCondition
-from .serializers import ContactUsSerializer, TermsConditionSerializer
+from dashboard.models import ContactUs, TermsCondition,CustomAd
 
 
 class CustomPageNumberPagination(PageNumberPagination):
@@ -135,6 +134,21 @@ class TermsConditionAPIView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+class CustomAdListAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        try:
+            ads = CustomAd.objects.filter(active_status=True)
+            ads = [ad for ad in ads if ad.is_currently_active()]
+
+            ads.sort(key=lambda ad: (-(ad.priority or 0), -(ad.start_date.timestamp() if ad.start_date else 0), -ad.created_at.timestamp()))
+            serializer = CustomAdSerializer(ads, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

@@ -59,6 +59,10 @@ from django.conf import settings
 
 
 
+from dashboard.forms import CustomAdForm
+from dashboard.models import CustomAd
+
+
 class HomeView(AdminPermissionMixin, View):
     template_name = 'home/index.html'
 
@@ -828,7 +832,7 @@ class OrdersDashboardView(PaginationSearchMixin, View):
             'orders': paginated_orders,
             'order_statuses': [choice[0] for choice in Order.STATUS_CHOICES],
             'products': Product.objects.all(),
-            'customers': Profile.objects.all(),
+            'customers': Profile.objects.all().exclude(is_superuser=True),
             'today': today,
             'week_ago': week_ago,
             'month_ago': month_ago,
@@ -1070,7 +1074,7 @@ class CustomersView(PaginationSearchMixin, View):
     search_fields = ['first_name', 'last_name', 'email', 'phone']
 
     def get_queryset(self):
-        return Profile.objects.filter(is_active=True).order_by('-id')
+        return Profile.objects.filter(is_active=True).exclude(is_superuser=True).order_by('-id')
 
     def get(self, request):
         queryset = self.get_queryset()
@@ -1629,4 +1633,62 @@ class ServiceImageDeleteView(View):
         image = get_object_or_404(ServiceImage, pk=pk)
         image.delete()
         return JsonResponse({'success': True})
+
+
+
+class CustomAdsView(PaginationSearchMixin, View):
+    template_name = 'ads/custom_ads.html'
+    search_fields = ['title', 'ad_type', 'target_url']
+    fields = []
+
+    def get(self, request):
+        ads = CustomAd.objects.all().order_by('-priority', '-start_date', '-created_at')
+        search_query = request.GET.get('q', '').strip()
+        filter_fields = self.get_filter_fields(request)
+        filtered_ads = self.filter_queryset(ads, search_query, filter_fields)
+        ads_page = self.paginate_queryset(request, filtered_ads)
+        return render(request, self.template_name, {
+            'ads': ads_page,
+            'search_query': search_query,
+            'filter_fields': filter_fields,
+            'ad_type_choices':CustomAd.AD_TYPE_CHOICES
+        })
+
+
+class CustomAdCreateView(View):
+    def post(self, request):
+        form = CustomAdForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Custom Ad created successfully.", extra_tags="ads-success")
+            return redirect('custom_ads')
+        for field, error in form.errors.items():
+            messages.error(request, f"Error with {field}: {error}", extra_tags="ads-error")
+        messages.error(request, "Custom Ad creation failed.", extra_tags="ads-error")
+        return redirect('custom_ads')
+
+
+class CustomAdEditView(View):
+    def post(self, request, pk):
+        ad = get_object_or_404(CustomAd, pk=pk)
+        form = CustomAdForm(request.POST, request.FILES, instance=ad)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Custom Ad updated successfully.", extra_tags="ads-success")
+            return redirect('custom_ads')
+        for field, error in form.errors.items():
+            messages.error(request, f"Error with {field}: {error}", extra_tags="ads-error")
+        messages.error(request, "Custom Ad update failed.", extra_tags="ads-error")
+        return redirect('custom_ads')
+
+
+class CustomAdDeleteView(View):
+    def get(self, request, pk):
+        ad = get_object_or_404(CustomAd, pk=pk)
+        try:
+            ad.delete()
+            messages.success(request, "Custom Ad deleted successfully.", extra_tags="ads-success")
+        except Exception as e:
+            messages.error(request, f"Failed to delete ad: {str(e)}", extra_tags="ads-error")
+        return redirect('custom_ads')
 

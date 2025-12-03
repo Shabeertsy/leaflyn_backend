@@ -142,5 +142,12 @@ urlpatterns = [
     path('services/<int:service_id>/images/add/', views.ServiceImageCreateView.as_view(), name='add_service_image'),
     path('service-images/delete/<int:pk>/', views.ServiceImageDeleteView.as_view(), name='delete_service_image'),
 
+
+    ## Custom ads
+    path('custom-ads/', views.CustomAdsView.as_view(), name='custom_ads'),
+    path('custom-ads/add/', views.CustomAdCreateView.as_view(), name='add_custom_ad'),
+    path('custom-ads/edit/<int:pk>/', views.CustomAdEditView.as_view(), name='edit_custom_ad'),
+    path('custom-ads/delete/<int:pk>/', views.CustomAdDeleteView.as_view(), name='delete_custom_ad'),
+
     path('icons/', views.IconsView.as_view(), name='icons'),
 ]

@@ -1,0 +1,429 @@
+{% extends base_template %}
+
+{% block title %} Custom Advertisements {% endblock title %}
+
+{% block content %}
+
+<!-- User-friendly floating Django messages -->
+{% if messages %}
+  <div class="custom-message-container" id="custom-message-container">
+    {% for message in messages %}
+      {% if "ads-success" in message.tags %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <span class="d-flex align-items-center">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span>{{ message }}</span>
+          </span>
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="pointer-events:auto;">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% elif "ads-error" in message.tags %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <span class="d-flex align-items-center">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span>{{ message }}</span>
+          </span>
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="pointer-events:auto;">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% else %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+          <span class="d-flex align-items-center">
+            <i class="fas fa-info-circle mr-2"></i>
+            <span>{{ message }}</span>
+          </span>
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="pointer-events:auto;">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col">
+      <div class="card">
+
+        <div class="card-header border-0 d-flex justify-content-between align-items-center flex-wrap">
+          <div class="d-flex align-items-center">
+            <button type="button" class="ad-style-btn mr-3" data-toggle="modal" data-target="#addAdModal"
+                    data-bs-toggle="modal" data-bs-target="#addAdModal" aria-label="Add New Custom Ad">
+              <span class="btn-icon">
+                <i class="fas fa-plus"></i>
+              </span>
+              <span class="add-tooltip">Add Custom Ad</span>
+              <span class="sr-only">Add New Custom Ad</span>
+            </button>
+            <h3 class="mb-0">Custom Advertisements</h3>
+          </div>
+          <form method="get" class="search-input-group" style="max-width: 350px;">
+            <div class="search-box">
+              <span class="search-icon">
+                <i class="fas fa-search"></i>
+              </span>
+              <input type="text" name="q" class="form-control" placeholder="Search ads..." value="{{ request.GET.q|default_if_none:'' }}">
+              <button class="search-btn" type="submit" aria-label="Search">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+              {% if request.GET.q %}
+              <a href="{% url 'custom_ads' %}" class="clear-search" title="Clear search">
+                <i class="fas fa-times"></i>
+              </a>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-items-center table-flush">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Image</th>
+                <th scope="col">Title</th>
+                <th scope="col">Description</th>
+                <th scope="col">Type</th>
+                <th scope="col">Target URL</th>
+                <th scope="col">Active</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Start</th>
+                <th scope="col">End</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ad in ads %}
+              <tr>
+                <td>{{ forloop.counter0|add:ads.start_index }}</td>
+                <td>
+                  {% if ad.image %}
+                    <img src="{{ ad.image.url }}" alt="{{ ad.title }}" style="width: 60px; height: 36px; object-fit: cover; border-radius: 4px;">
+                  {% else %}
+                    <i class="fas fa-image text-muted" style="font-size: 24px;"></i>
+                  {% endif %}
+                </td>
+                <td>{{ ad.title }}</td>
+                <td>
+                  {% if ad.description %}
+                    <span>{{ ad.description|truncatechars:40 }}</span>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge badge-info text-uppercase">{% if ad.get_ad_type_display %}{{ ad.get_ad_type_display }}{% else %}-{% endif %}</span>
+                </td>
+                <td>
+                  {% if ad.target_url %}
+                    <a href="{{ ad.target_url }}" target="_blank" rel="noopener">{{ ad.target_url|truncatechars:32 }}</a>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if ad.is_active %}
+                    <span class="badge badge-success">Active</span>
+                  {% else %}
+                    <span class="badge badge-secondary">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>{{ ad.priority }}</td>
+                <td>
+                  {% if ad.start_date %}
+                    {{ ad.start_date|date:"Y-m-d H:i" }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if ad.end_date %}
+                    {{ ad.end_date|date:"Y-m-d H:i" }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td class="action-btns">
+                  <!-- Edit button triggers unique modal for each ad -->
+                  <button type="button"
+                          class="btn btn-sm btn-primary"
+                          title="Edit"
+                          data-toggle="modal"
+                          data-target="#editAdModal-{{ ad.id }}"
+                          data-bs-toggle="modal"
+                          data-bs-target="#editAdModal-{{ ad.id }}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button type="button"
+                          class="btn btn-sm btn-danger"
+                          title="Delete"
+                          data-toggle="modal"
+                          data-target="#deleteAdModal-{{ ad.id }}"
+                          data-bs-toggle="modal"
+                          data-bs-target="#deleteAdModal-{{ ad.id }}">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Edit Ad Modal -->
+              <div class="modal fade" id="editAdModal-{{ ad.id }}" tabindex="-1" aria-labelledby="editAdModalLabel-{{ ad.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <form method="post" action="{% url 'edit_custom_ad' ad.id %}" enctype="multipart/form-data" class="needs-validation" novalidate>
+                      {% csrf_token %}
+                      <div class="modal-header justify-content-center" style="background: #BBDEFB;">
+                        <h6 class="modal-title w-100 text-center mb-0" id="editAdModalLabel-{{ ad.id }}">Edit Custom Ad</h6>
+                        <button type="button" class="close position-absolute" style="right: 1rem; top: 1rem;" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="form-group mb-3">
+                          <label for="edit_ad_title_{{ ad.id }}">Ad Title</label>
+                          <input type="text" class="form-control"
+                                 id="edit_ad_title_{{ ad.id }}"
+                                 name="title"
+                                 value="{{ ad.title }}"
+                                 required>
+                          <div class="invalid-feedback">
+                            Please provide an ad title.
+                          </div>
+                        </div>
+                        <div class="form-group mb-3">
+                          <label for="edit_ad_description_{{ ad.id }}">Description</label>
+                          <textarea class="form-control"
+                                    id="edit_ad_description_{{ ad.id }}"
+                                    name="description"
+                                    rows="2"
+                                    placeholder="Enter a short description (optional)">{{ ad.description }}</textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                          <label for="edit_ad_image_{{ ad.id }}">Ad Image</label>
+                          {% if ad.image %}
+                          <div class="mb-2">
+                            <img src="{{ ad.image.url }}" alt="Current Ad Image" style="width: 90px; height: 48px; object-fit: cover; border-radius: 4px;">
+                            <small class="d-block text-muted">Current image</small>
+                          </div>
+                          {% endif %}
+                          <input type="file" class="form-control" id="edit_ad_image_{{ ad.id }}" name="image" accept="image/*">
+                          <small class="form-text text-muted">Upload a new image (optional)</small>
+                        </div>
+                        <div class="form-group mb-3">
+                          <label for="edit_ad_target_url_{{ ad.id }}">Target URL</label>
+                          <input type="url" class="form-control"
+                                 id="edit_ad_target_url_{{ ad.id }}"
+                                 name="target_url"
+                                 value="{{ ad.target_url|default_if_none:'' }}"
+                                 placeholder="https://example.com">
+                        </div>
+                        <div class="form-group mb-3">
+                          <label for="edit_ad_type_{{ ad.id }}">Ad Type</label>
+                          <select class="form-control"
+                                  id="edit_ad_type_{{ ad.id }}"
+                                  name="ad_type">
+                            <option value="">No Type</option>
+                            {% for code, label in ad.AD_TYPE_CHOICES %}
+                              <option value="{{ code }}" 
+                                  {% if ad.ad_type == code or (not ad.ad_type and code == 'banner') %}
+                                    selected
+                                  {% endif %}
+                              >{{ label }}</option>
+                            {% endfor %}
+                          </select>
+                          <small class="form-text text-muted">Optional. By default, "Banner" will be selected if available.</small>
+                        </div>
+                        <div class="row">
+                          <div class="form-group col-md-6 mb-3">
+                            <label for="edit_ad_start_date_{{ ad.id }}">Start Date</label>
+                            <input type="datetime-local"
+                                   id="edit_ad_start_date_{{ ad.id }}"
+                                   name="start_date"
+                                   class="form-control"
+                                   value="{% if ad.start_date %}{{ ad.start_date|date:'Y-m-d\TH:i' }}{% endif %}">
+                          </div>
+                          <div class="form-group col-md-6 mb-3">
+                            <label for="edit_ad_end_date_{{ ad.id }}">End Date</label>
+                            <input type="datetime-local"
+                                   id="edit_ad_end_date_{{ ad.id }}"
+                                   name="end_date"
+                                   class="form-control"
+                                   value="{% if ad.end_date %}{{ ad.end_date|date:'Y-m-d\TH:i' }}{% endif %}">
+                          </div>
+                        </div>
+                        <div class="form-group mb-3">
+                          <label for="edit_ad_priority_{{ ad.id }}">Display Priority</label>
+                          <input type="number" class="form-control"
+                                 id="edit_ad_priority_{{ ad.id }}"
+                                 name="priority"
+                                 min="0"
+                                 value="{{ ad.priority|default:0 }}">
+                        </div>
+                        <div class="form-check mb-3">
+                          <input type="checkbox"
+                                 class="form-check-input"
+                                 id="edit_ad_is_active_{{ ad.id }}"
+                                 name="is_active"
+                                 {% if ad.is_active %}checked{% endif %}>
+                          <label class="form-check-label" for="edit_ad_is_active_{{ ad.id }}">Active</label>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Ad</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Delete Ad Modal -->
+              <div class="modal fade modal-confirm" id="deleteAdModal-{{ ad.id }}" tabindex="-1" aria-labelledby="deleteAdModalLabel-{{ ad.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header border-0">
+                      <div class="icon-box mx-auto">
+                        <i class="fas fa-exclamation-triangle"></i>
+                      </div>
+                    </div>
+                    <div class="modal-body">
+                      <h5 class="modal-title mb-2" id="deleteAdModalLabel-{{ ad.id }}">Delete Advertisement</h5>
+                      <p>Are you sure you want to delete the ad "<strong>{{ ad.title }}</strong>"?</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancel</button>
+                      <a href="{% url 'delete_custom_ad' ad.id %}" class="btn btn-danger">Delete</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              <tr>
+                <td colspan="11" class="text-center text-muted">No custom ads found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if ads.has_other_pages %}
+        <div class="card-footer py-3">
+          <nav aria-label="Ads pagination">
+            <ul class="pagination justify-content-end mb-0">
+              {% if ads.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ ads.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" tabindex="-1">
+                    <i class="fas fa-angle-left"></i>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                </li>
+              {% endif %}
+              {% for i in ads.paginator.page_range %}
+                {% if ads.number == i %}
+                  <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                  <li class="page-item"><a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a></li>
+                {% endif %}
+              {% endfor %}
+              {% if ads.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ ads.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Ad Modal -->
+<div class="modal fade" id="addAdModal" tabindex="-1" aria-labelledby="addAdModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <form method="post" action="{% url 'add_custom_ad' %}" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="modal-header justify-content-center" style="background: #BBDEFB;">
+          <h6 class="modal-title w-100 text-center mb-0" id="addAdModalLabel">Add New Custom Ad</h6>
+          <button type="button" class="close position-absolute" style="right: 1rem; top: 1rem;" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group mb-3">
+            <label for="ad_title_modal">Ad Title</label>
+            <input type="text" class="form-control" id="ad_title_modal" name="title" placeholder="Enter ad title" required>
+            <div class="invalid-feedback">
+              Please provide an ad title.
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="ad_description_modal">Description</label>
+            <textarea class="form-control" id="ad_description_modal" name="description" rows="2" placeholder="Enter a short description (optional)"></textarea>
+          </div>
+          <div class="form-group mb-3">
+            <label for="ad_image_modal">Ad Image</label>
+            <input type="file" class="form-control" id="ad_image_modal" name="image" accept="image/*">
+            <small class="form-text text-muted">Upload an image for this ad (optional)</small>
+          </div>
+          <div class="form-group mb-3">
+            <label for="ad_target_url_modal">Target URL</label>
+            <input type="url" class="form-control" id="ad_target_url_modal" name="target_url" placeholder="https://example.com">
+          </div>
+          <div class="form-group mb-3">
+            <label for="ad_type_modal">Ad Type</label>
+            <select class="form-control" id="ad_type_modal" name="ad_type">
+              <option value=""
+                {% if not ad_type_choices %}
+                  selected
+                {% endif %}
+              >No Type</option>
+              {% for code, label in ad_type_choices %}
+                <option value="{{ code }}"
+                  {% if code == 'banner' %}selected{% endif %}
+                >{{ label }}</option>
+              {% endfor %}
+            </select>
+            <small class="form-text text-muted">Optional. By default, "Banner" will be selected if available.</small>
+          </div>
+          <div class="row">
+            <div class="form-group col-md-6 mb-3">
+              <label for="ad_start_date_modal">Start Date</label>
+              <input type="datetime-local" class="form-control" id="ad_start_date_modal" name="start_date">
+            </div>
+            <div class="form-group col-md-6 mb-3">
+              <label for="ad_end_date_modal">End Date</label>
+              <input type="datetime-local" class="form-control" id="ad_end_date_modal" name="end_date">
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="ad_priority_modal">Display Priority</label>
+            <input type="number" class="form-control" id="ad_priority_modal" name="priority" min="0" value="0">
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="ad_is_active_modal" name="is_active" checked>
+            <label class="form-check-label" for="ad_is_active_modal">Active</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Ad</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

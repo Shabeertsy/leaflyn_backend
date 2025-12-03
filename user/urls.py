@@ -53,5 +53,7 @@ urlpatterns = [
     path('contact-us/', views.ContactUsAPIView.as_view(), name='contact-us-api'),
     path('terms-condition/', views.TermsConditionAPIView.as_view(), name='terms-condition-api'),
     path('company-contact/', views.CompanyContactAPIView.as_view(), name='company-contact-api'),
+
+    path('custom-ads/', views.CustomAdListAPIView.as_view(), name='custom-ads-api'),
     
 ]

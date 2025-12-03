@@ -294,6 +294,20 @@
             </a>
           </li>
         </ul>
+        
+        <!-- Ads & Custom Ads -->
+        <h6 class="navbar-heading p-0 text-muted border-bottom">
+          <span class="docs-normal">Ads</span>
+        </h6>
+        <ul class="navbar-nav mb-md-3">
+          <li class="nav-item">
+            {% url 'custom_ads' as custom_ads_url %}
+            <a class="nav-link{% if current_path == custom_ads_url %} active{% endif %}" href="{{ custom_ads_url }}">
+              <i class="ni ni-sound-wave"></i>
+              <span class="nav-link-text">Custom Ads</span>
+            </a>
+          </li>
+        </ul>
 
         <!-- Orders & Shipping -->
         <h6 class="navbar-heading p-0 text-muted border-bottom">

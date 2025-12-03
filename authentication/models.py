@@ -45,11 +45,21 @@ class CustomUserManager(BaseUserManager):
 class Profile(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, blank=True, null=True)
     phone_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
+    user_subtype = models.CharField(
+        max_length=10,
+        choices=[('retail', 'Retail'), ('wholesale', 'Wholesale')],
+        default='retail'
+    )
+    admin_approved = models.CharField(
+        max_length=10,
+        choices=[('new', 'New'), ('pending', 'Pending'), ('approved', 'Approved')],
+        default='new'
+    )
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    is_verified = models.BooleanField(default=False)  # Track if phone/email is verified
+    is_verified = models.BooleanField(default=False)  
     deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

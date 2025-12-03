@@ -454,6 +454,8 @@ class OrderItem(BaseModel):
         return f"{product_name} (x{self.quantity}) for Order #{order_id}"
 
 
+
+
 class Notification(BaseModel):
     NOTIFICATION_TYPES = [
         ('order_placed', 'Order Placed'),

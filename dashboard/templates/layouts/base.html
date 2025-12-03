@@ -114,7 +114,7 @@
                   <div class="row">
                     <div class="col">
                       <h5 class="card-title text-uppercase text-muted mb-0">Orders</h5>
-                      <span class="h2 font-weight-bold mb-0">{{ dashboard_data.orders|default:"-" }}</span>
+                      <span class="h2 font-weight-bold mb-0">{{ dashboard_data.orders|default:0 }}</span>
                     </div>
                     <div class="col-auto">
                       <div class="icon icon-shape bg-icon text-white rounded-circle shadow">
@@ -124,7 +124,7 @@
                   </div>
                   <p class="mt-3 mb-0 text-muted text-sm">
                     <span class="{% if dashboard_data.orders_change_is_positive %}text-success{% else %}text-danger{% endif %} mr-2">
-                      <i class="fa {% if dashboard_data.orders_change_is_positive %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> {{ dashboard_data.orders_change|default:"-" }}%
+                      <i class="fa {% if dashboard_data.orders_change_is_positive %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> {{ dashboard_data.orders_change|default:0 }}%
                     </span>
                     <span class="text-nowrap">{{ dashboard_data.orders_change_period|default:"" }}</span>
                   </p>
@@ -137,7 +137,7 @@
                   <div class="row">
                     <div class="col">
                       <h5 class="card-title text-uppercase text-muted mb-0">New users</h5>
-                      <span class="h2 font-weight-bold mb-0">{{ dashboard_data.new_users|default:"-" }}</span>
+                      <span class="h2 font-weight-bold mb-0">{{ dashboard_data.new_users|default:0 }}</span>
                     </div>
                     <div class="col-auto">
                       <div class="icon icon-shape bg-icon-1 text-white rounded-circle shadow">
@@ -147,7 +147,7 @@
                   </div>
                   <p class="mt-3 mb-0 text-muted text-sm">
                     <span class="{% if dashboard_data.new_users_change_is_positive %}text-success{% else %}text-danger{% endif %} mr-2">
-                      <i class="fas {% if dashboard_data.new_users_change_is_positive %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> {{ dashboard_data.new_users_change|default:"-" }}%
+                      <i class="fas {% if dashboard_data.new_users_change_is_positive %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> {{ dashboard_data.new_users_change|default:0 }}%
                     </span>
                     <span class="text-nowrap">{{ dashboard_data.new_users_change_period|default:"" }}</span>
                   </p>
@@ -160,7 +160,7 @@
                   <div class="row">
                     <div class="col">
                       <h5 class="card-title text-uppercase text-muted mb-0">Sales</h5>
-                      <span class="h2 font-weight-bold mb-0">{{ dashboard_data.sales|default:"-" }}</span>
+                      <span class="h2 font-weight-bold mb-0">{{ dashboard_data.sales|default:0 }}</span>
                     </div>
                     <div class="col-auto">
                       <div class="icon icon-shape bg-icon-1 text-white rounded-circle shadow">
@@ -170,7 +170,7 @@
                   </div>
                   <p class="mt-3 mb-0 text-muted text-sm">
                     <span class="{% if dashboard_data.sales_change_is_positive %}text-success{% else %}text-warning{% endif %} mr-2">
-                      <i class="fas {% if dashboard_data.sales_change_is_positive %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> {{ dashboard_data.sales_change|default:"-" }}%
+                      <i class="fas {% if dashboard_data.sales_change_is_positive %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> {{ dashboard_data.sales_change|default:0 }}%
                     </span>
                     <span class="text-nowrap">{{ dashboard_data.sales_change_period|default:"" }}</span>
                   </p>
@@ -184,7 +184,7 @@
                     <div class="col">
                       <h5 class="card-title text-uppercase text-muted mb-0">Performance</h5>
                       <span class="h2 font-weight-bold mb-0">
-                        {{ dashboard_data.performance|default:"-" }}%
+                        {{ dashboard_data.performance|default:0 }}%
                       </span>
                     </div>
                     <div class="col-auto">
@@ -196,7 +196,7 @@
                   <p class="mt-3 mb-0 text-muted text-sm">
                     <span class="{% if dashboard_data.performance_change_is_positive %}text-success{% else %}text-danger{% endif %} mr-2">
                       <i class="fas {% if dashboard_data.performance_change_is_positive %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> 
-                      {% if dashboard_data.performance_change %}{{ dashboard_data.performance_change }}%{% else %}12%{% endif %}
+                      {% if dashboard_data.performance_change is not None %}{{ dashboard_data.performance_change|default:0 }}%{% else %}0%{% endif %}
                     </span>
                     <span class="text-nowrap">
                       {% if dashboard_data.performance_change_period %}{{ dashboard_data.performance_change_period }}{% else %}Since last month{% endif %}

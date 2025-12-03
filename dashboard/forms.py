@@ -1,7 +1,23 @@
 from django import forms
 from user.models import Categories, Colors, Coupon, Product, ProductVariant, Sizes, CareGuide, ServiceCategory, Service, ServiceFeature, ServiceImage
+from dashboard.models import CustomAd
 
 
+
+class CustomAdForm(forms.ModelForm):
+    class Meta:
+        model = CustomAd
+        fields = [
+            'title',
+            'image',
+            'target_url',
+            'ad_type',
+            'is_active',
+            'start_date',
+            'description',
+            'end_date',
+            'priority'
+        ]
 
 
 class CategoriesForm(forms.ModelForm):
@@ -102,8 +118,6 @@ class ServiceImageForm(forms.ModelForm):
         fields = ['image', 'order_by']
 
 
-# payment/forms.py
-from django import forms
 from payment.models import PaymentGateway
 import json
 from django.core.exceptions import ValidationError
