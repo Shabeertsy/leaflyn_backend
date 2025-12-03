@@ -392,53 +392,72 @@ class WishlistAPIView(APIView):
 
 
 
-
-
 class CreateCashOnDeliveryOrderAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
+            # 1. SHIPPING ADDRESS CHECK
             shipping_address_id = request.data.get('shipping_address_id')
             if not shipping_address_id:
                 return Response({'error': 'Shipping address is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
-                shipping_address = ShippingAddress.objects.get(uuid=shipping_address_id, user=request.user)
+                shipping_address = ShippingAddress.objects.get(
+                    uuid=shipping_address_id, 
+                    user=request.user
+                )
             except ShippingAddress.DoesNotExist:
                 return Response({'error': 'Shipping address not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-            cart_items = CartItem.objects.filter(user=request.user)
-            if not cart_items.exists():
-                return Response({'error': 'No items in cart.'}, status=status.HTTP_400_BAD_REQUEST)
+            # 2. GET USER CART
+            try:
+                cart = request.user.profile.cart
+            except Cart.DoesNotExist:
+                return Response({'error': 'Cart not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-            # Create Order
+            cart_items = cart.items.all()
+            if not cart_items.exists():
+                return Response({'error': 'Cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # 3. CREATE ORDER
             order = Order.objects.create(
                 user=request.user,
                 shipping_address=shipping_address,
-                payment_type='COD', 
+                payment_type='COD',
                 status='Pending'
             )
 
-            # Create OrderItems and calculate total
+            # 4. ADD ITEMS TO ORDER
             order_total = 0
             for cart_item in cart_items:
                 OrderItem.objects.create(
                     order=order,
                     product_variant=cart_item.variant,
                     quantity=cart_item.quantity,
-                    price=cart_item.variant.price,
+                    price=cart_item.variant.discounted_price(),  # safe pricing
                 )
-                order_total += cart_item.variant.price * cart_item.quantity
+                order_total += cart_item.line_total()
 
-            order.total_price = order_total
+            # 5. APPLY COUPON (If any)
+            if cart.coupon:
+                if cart.coupon.offer_type == 'percentage':
+                    order_total -= order_total * (cart.coupon.offer / 100)
+                elif cart.coupon.offer_type == 'amount':
+                    order_total -= cart.coupon.offer
+
+            # Final price cannot go below 0
+            order.total_price = max(order_total, 0)
             order.save()
 
-            # Clear cart after order placed
+            # 6. CLEAR CART
             cart_items.delete()
+            cart.coupon = None
+            cart.save()
 
+            # 7. RETURN ORDER
             serializer = OrderSerializer(order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
