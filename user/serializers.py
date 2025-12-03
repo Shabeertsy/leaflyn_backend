@@ -4,7 +4,7 @@ from .models import ProductImage
 from .models import CompanyContact
 from dashboard.models import ContactUs  ,TermsCondition
 from decimal import Decimal
-from .models import ShippingAddress,ServiceCategory,Service,ServiceFeature,ServiceImage
+from .models import ShippingAddress,ServiceCategory,Service,ServiceFeature,ServiceImage, Cart, CartItem, Wishlist
 
 
 
@@ -243,3 +243,48 @@ class ServiceSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         depth = 1
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    variant = ProductVariantSerializer(read_only=True)
+    
+    class Meta:
+        model = CartItem
+        fields = [
+            'uuid',
+            'variant',
+            'quantity',
+            'line_total',
+            'created_at',
+            'updated_at',
+        ]
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True, read_only=True)
+    total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cart
+        fields = [
+            'uuid',
+            'items',
+            'total',
+            'created_at',
+            'updated_at',
+        ]
+
+    def get_total(self, obj):
+        return obj.total()
+
+
+class WishlistSerializer(serializers.ModelSerializer):
+    variant = ProductVariantSerializer(read_only=True)
+
+    class Meta:
+        model = Wishlist
+        fields = [
+            'uuid',
+            'variant',
+            'created_at',
+            'updated_at',
+        ]
