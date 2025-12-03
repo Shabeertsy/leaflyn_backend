@@ -92,7 +92,9 @@ class SimilarProductListAPIView(APIView):
             if not product_variants.exists():
                 return Response({"error": "Product(s) not found"}, status=status.HTTP_404_NOT_FOUND)
 
-            similar_products = ProductVariant.objects.filter(product__category_id=product_variants.first().product.category_id).exclude(uuid=uuid)
+            similar_products = ProductVariant.objects.filter(
+                product__category_id=product_variants.first().product.category_id
+            ).exclude(uuid=uuid)[:6]
             serializer = ProductVariantSerializer(similar_products, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:

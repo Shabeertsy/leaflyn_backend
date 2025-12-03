@@ -226,8 +226,8 @@
                                   name="ad_type">
                             <option value="">No Type</option>
                             {% for code, label in ad.AD_TYPE_CHOICES %}
-                              <option value="{{ code }}" 
-                                  {% if ad.ad_type == code or (not ad.ad_type and code == 'banner') %}
+                              <option value="{{ code }}"
+                                  {% if ad.ad_type == code %}
                                     selected
                                   {% endif %}
                               >{{ label }}</option>
@@ -385,11 +385,7 @@
           <div class="form-group mb-3">
             <label for="ad_type_modal">Ad Type</label>
             <select class="form-control" id="ad_type_modal" name="ad_type">
-              <option value=""
-                {% if not ad_type_choices %}
-                  selected
-                {% endif %}
-              >No Type</option>
+              <option value="">No Type</option>
               {% for code, label in ad_type_choices %}
                 <option value="{{ code }}"
                   {% if code == 'banner' %}selected{% endif %}
