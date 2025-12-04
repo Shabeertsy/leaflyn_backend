@@ -508,5 +508,4 @@ class Notification(BaseModel):
             notification_type=notification_type,
             priority=priority,
             order=order,
-            payment=payment
         )
