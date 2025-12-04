@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, OrderItem, Product, ProductVariant, CareGuide, Categories
+from .models import Notification, Order, OrderItem, Product, ProductVariant, CareGuide, Categories
 from .models import ProductImage
 from .models import CompanyContact
 from dashboard.models import ContactUs, CustomAd  ,TermsCondition
@@ -343,4 +343,24 @@ class OrderSerializer(serializers.ModelSerializer):
             'items',
             'created_at',
             'updated_at'
+        ]
+
+class NotificationSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    order = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = [
+            'id',
+            'title',
+            'message',
+            'notification_type',
+            'priority',
+            'is_read',
+            'read_at',
+            'user',
+            'order',
+            'created_at',
+            'updated_at',
         ]
