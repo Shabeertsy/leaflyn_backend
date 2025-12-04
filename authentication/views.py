@@ -121,8 +121,6 @@ class SendOTPView(APIView):
             'message': message,
             'contact': contact,
             'contact_type': contact_type,
-            # For development only - remove in production
-            'otp_code': otp.otp_code if settings.DEBUG else None
         }, status=status.HTTP_200_OK)
 
 
@@ -235,18 +233,46 @@ class PersonalInfo(generics.RetrieveUpdateAPIView):
 
 
 
-
 class RegisterUserAndAddressAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         data = request.data.copy()
+        user = request.user
 
-        # Required user fields
-        full_name = data.get('full_name', '').strip()
-        phone_number = data.get('phone_number')
-        email = data.get('email')
+        # Update password if provided
         password = data.get('password')
+        if password:
+            user.set_password(password)
+            user.save()
+        
+        # Update contact info if provided (email or phone)
+        email = data.get("email")
+        phone_number = data.get("phone_number")
+        updated_fields = []
+
+        if email and user.email != email:
+            user.email = email
+            updated_fields.append("email")
+        if phone_number and getattr(user, "phone_number", None) != phone_number:
+            user.phone_number = phone_number
+            updated_fields.append("phone_number")
+        
+        # Optional: update name
+        full_name = data.get('full_name', '').strip()
+        if full_name:
+            name_parts = full_name.split(' ', 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ''
+            if user.first_name != first_name:
+                user.first_name = first_name
+                updated_fields.append("first_name")
+            if user.last_name != last_name:
+                user.last_name = last_name
+                updated_fields.append("last_name")
+        
+        if updated_fields:
+            user.save(update_fields=updated_fields)
 
         # Required address fields
         address_fields = [
@@ -259,34 +285,12 @@ class RegisterUserAndAddressAPIView(APIView):
         ]
         address_data = {field: data.get(field) for field in address_fields}
 
-        # Validate required fields
-        required_fields = ['full_name', 'phone_number', 'email', 'password', 'place_street', 'city', 'state', 'pin_code']
-        missing_fields = [field for field in required_fields if not data.get(field)]
-        if missing_fields:
-            return Response({'error': f"Missing required fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
+        # Validate minimum required address fields
+        required_address_fields = ['place_street', 'city', 'state', 'pin_code']
+        missing_address = [field for field in required_address_fields if not data.get(field)]
+        if missing_address:
+            return Response({'error': f"Missing required address fields: {', '.join(missing_address)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create user
-        User = get_user_model()
-        if User.objects.filter(email=email).exists():
-            return Response({'error': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
-        if User.objects.filter(phone_number=phone_number).exists():
-            return Response({'error': 'Phone number already registered'}, status=status.HTTP_400_BAD_REQUEST)
-
-        name_parts = full_name.split(' ', 1)
-        first_name = name_parts[0]
-        last_name = name_parts[1] if len(name_parts) > 1 else ''
-        try:
-            user = User.objects.create_user(
-                email=email,
-                phone_number=phone_number,
-                password=password,
-                first_name=first_name,
-                last_name=last_name
-            )
-        except Exception as e:
-            return Response({'error': 'Unable to create user: {}'.format(str(e))}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Create address for user
         from user.models import ShippingAddress
 
         shipping_address = ShippingAddress.objects.create(
@@ -299,10 +303,7 @@ class RegisterUserAndAddressAPIView(APIView):
             pin_code=address_data.get('pin_code'),
         )
 
-        # Issue JWT tokens
-        refresh = RefreshToken.for_user(user)
-
-        # Serialize user and address
+        # Serialize user and address (token comes from request header, do not re-issue)
         user_data = ProfileSerializer(user).data
         address_serializer_cls = None
         try:
@@ -317,12 +318,10 @@ class RegisterUserAndAddressAPIView(APIView):
 
         return Response(
             {
-                "message": "User and address created successfully.",
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
+                "message": "User address updated/added successfully.",
                 "user": user_data,
                 "address": address_data_response,
             },
-            status=status.HTTP_201_CREATED,
+            status=status.HTTP_200_OK,
         )
 

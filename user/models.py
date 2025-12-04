@@ -455,17 +455,21 @@ class OrderItem(BaseModel):
 
 
 
-
 class Notification(BaseModel):
-    NOTIFICATION_TYPES = [
+    NOTIFICATION_TYPE_CHOICES = [
         ('order_placed', 'Order Placed'),
+        ('order_confirmed', 'Order Confirmed'),
         ('order_shipped', 'Order Shipped'),
         ('order_delivered', 'Order Delivered'),
+        ('order_cancelled', 'Order Cancelled'),
+        ('order_returned', 'Order Returned'),
         ('payment_success', 'Payment Success'),
         ('payment_failed', 'Payment Failed'),
         ('promotion', 'Promotion'),
         ('system', 'System'),
+        ('other', 'Other'),
     ]
+
 
     PRIORITY_CHOICES = [
         ('low', 'Low'),
@@ -477,7 +481,7 @@ class Notification(BaseModel):
     user = models.ForeignKey('authentication.Profile', on_delete=models.CASCADE, related_name='notifications')
     title = models.CharField(max_length=200)
     message = models.TextField()
-    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPE_CHOICES)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     is_read = models.BooleanField(default=False)
     read_at = models.DateTimeField(blank=True, null=True)

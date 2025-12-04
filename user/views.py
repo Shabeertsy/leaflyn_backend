@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -6,7 +7,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.pagination import PageNumberPagination
 
 
-from .models import Order, Product, ProductVariant, CareGuide, Categories, ShippingAddress, Cart, CartItem, Wishlist
+from .models import Notification, Order, Product, ProductVariant, CareGuide, Categories, ShippingAddress, Cart, CartItem, Wishlist
 from .serializers import *
 
 from dashboard.models import ContactUs, TermsCondition,CustomAd
@@ -22,7 +23,7 @@ class CategoryListAPIView(APIView):
     permission_classes = [AllowAny]
     def get(self, request): 
         try:
-            categories = Categories.objects.filter(active_status=True)
+            categories = Categories.objects.filter(active_status=True).order_by('-id')
             serializer = CategorySerializer(categories, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
@@ -50,12 +51,22 @@ class ProductCollectionListAPIView(APIView):
 
 class ProductListAPIView(APIView):
     permission_classes = [AllowAny]
+
     def get(self, request):
         try:
             products = ProductVariant.objects.filter(active_status=True).order_by('-id')
 
             sizes = request.query_params.getlist('size')
             category_id = request.query_params.get('category_id')
+            search_query = request.query_params.get('q', None)
+
+            # Apply search filtering
+            if search_query:
+                products = products.filter(
+                    Q(variant__icontains=search_query) |
+                    Q(product__name__icontains=search_query) |
+                    Q(description__icontains=search_query)
+                )
 
             if sizes:
                 products = products.filter(size__in=sizes)
@@ -68,7 +79,7 @@ class ProductListAPIView(APIView):
             # Apply pagination
             paginator = CustomPageNumberPagination()
             paginated_products = paginator.paginate_queryset(products, request)
-            
+
             if paginated_products is not None:
                 serializer = ProductVariantSerializer(paginated_products, many=True)
                 return paginator.get_paginated_response(serializer.data)
@@ -93,6 +104,7 @@ class SimilarProductListAPIView(APIView):
                 return Response({"error": "Product(s) not found"}, status=status.HTTP_404_NOT_FOUND)
 
             similar_products = ProductVariant.objects.filter(
+
                 product__category_id=product_variants.first().product.category_id
             ).exclude(uuid=uuid)[:6]
             serializer = ProductVariantSerializer(similar_products, many=True)
@@ -120,8 +132,6 @@ class ProductSingleAPIView(APIView):
 
 
 
-
-
 ## contact us api
 class CompanyContactAPIView(APIView):
     permission_classes = [AllowAny]
@@ -132,6 +142,7 @@ class CompanyContactAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ContactUsAPIView(APIView):
     permission_classes = [AllowAny]
@@ -261,6 +272,7 @@ class CartAPIView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class AddToCartAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -294,6 +306,7 @@ class AddToCartAPIView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class RemoveFromCartAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -315,6 +328,7 @@ class RemoveFromCartAPIView(APIView):
             return Response({"error": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UpdateCartItemAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -461,5 +475,65 @@ class CreateCashOnDeliveryOrderAPIView(APIView):
             serializer = OrderSerializer(order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# My Orders 
+class MyOrdersAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = request.user.profile
+            orders = Order.objects.filter(user=profile).order_by('-created_at')
+            paginator = CustomPageNumberPagination()
+            paginated_orders = paginator.paginate_queryset(orders, request)
+            from .serializers import OrderSerializer  # If not already imported
+
+            if paginated_orders is not None:
+                serializer = OrderSerializer(paginated_orders, many=True)
+                return paginator.get_paginated_response(serializer.data)
+
+            serializer = OrderSerializer(orders, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class NotificationListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            user_profile = request.user.profile
+            notifications = Notification.objects.filter(user=user_profile).order_by('-created_at')
+            paginator = CustomPageNumberPagination()
+            page = paginator.paginate_queryset(notifications, request)
+            from .serializers import NotificationSerializer
+
+            if page is not None:
+                serializer = NotificationSerializer(page, many=True)
+                return paginator.get_paginated_response(serializer.data)
+
+            serializer = NotificationSerializer(notifications, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class NotificationMarkAsReadAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            user_profile = request.user.profile
+            notification = Notification.objects.get(pk=pk, user=user_profile)
+            notification.mark_as_read()
+            from .serializers import NotificationSerializer
+            serializer = NotificationSerializer(notification)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Notification.DoesNotExist:
+            return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -861,8 +861,22 @@ class OrderDetailView(View):
         order = get_object_or_404(Order, id=order_id)
         new_status = request.POST.get('status')
         if new_status and new_status in dict(Order.STATUS_CHOICES):
+            previous_status = order.status
             order.status = new_status
             order.save()
+            
+            user_profile = order.user
+            status_display = dict(Order.STATUS_CHOICES).get(new_status, new_status.title())
+            title = f"Order #{order.id} Status Updated"
+            message = f"Your order #{order.id} status has changed from '{dict(Order.STATUS_CHOICES).get(previous_status, previous_status.title())}' to '{status_display}'."
+            Notification.create_notification(
+                user=user_profile,
+                title=title,
+                message=message,
+                notification_type='order_' + new_status if f"order_{new_status}" in [n[0] for n in Notification.NOTIFICATION_TYPE_CHOICES] else 'other',
+                priority='medium',
+                order=order
+            )
             messages.success(request, f"Order status updated to '{new_status.title()}'.")
         else:
             messages.error(request, "Invalid status.")
