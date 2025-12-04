@@ -485,7 +485,7 @@ class MyOrdersAPIView(APIView):
 
     def get(self, request):
         try:
-            profile = request.user.profile
+            profile = request.user
             orders = Order.objects.filter(user=profile).order_by('-created_at')
             paginator = CustomPageNumberPagination()
             paginated_orders = paginator.paginate_queryset(orders, request)
@@ -506,7 +506,7 @@ class NotificationListAPIView(APIView):
 
     def get(self, request):
         try:
-            user_profile = request.user.profile
+            user_profile = request.user
             notifications = Notification.objects.filter(user=user_profile).order_by('-created_at')
             paginator = CustomPageNumberPagination()
             page = paginator.paginate_queryset(notifications, request)
@@ -527,7 +527,7 @@ class NotificationMarkAsReadAPIView(APIView):
 
     def post(self, request, pk):
         try:
-            user_profile = request.user.profile
+            user_profile = request.user
             notification = Notification.objects.get(pk=pk, user=user_profile)
             notification.mark_as_read()
             from .serializers import NotificationSerializer
