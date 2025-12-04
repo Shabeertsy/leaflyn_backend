@@ -66,6 +66,8 @@ urlpatterns = [
     path('remove-from-cart/<str:uuid>/', views.RemoveFromCartAPIView.as_view(), name='remove-from-cart'),
     path('update-cart-item/<str:uuid>/', views.UpdateCartItemAPIView.as_view(), name='update-cart-item'),
 
+    path('sync-cart/', views.SyncCartAPIView.as_view(), name='sync-cart'),
+
     # Notification 
     path('notifications/', views.NotificationListAPIView.as_view(), name='notification-list'),
     path('notifications/mark-as-read/<int:pk>/', views.NotificationMarkAsReadAPIView.as_view(), name='notification-mark-as-read'),

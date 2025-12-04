@@ -537,3 +537,53 @@ class NotificationMarkAsReadAPIView(APIView):
             return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SyncCartAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        # Validate payload
+        items = request.data.get("items", [])
+        if not isinstance(items, list):
+            return Response({"error": "Invalid data format for 'items'"}, status=400)
+        if not items:
+            return Response({"error": "No items to sync"}, status=400)
+
+        try:
+            from .models import Cart, CartItem, ProductVariant  
+        except ImportError:
+            return Response({"error": "Cart, CartItem or ProductVariant models not found"}, status=500)
+
+        cart, created = Cart.objects.get_or_create(user=user, defaults={})
+
+        updated_variant_uuids = set()
+        for item in items:
+            variant_uuid = item.get("variantUuid")
+            quantity = item.get("quantity")
+            if not variant_uuid or not isinstance(quantity, int) or quantity < 1:
+                continue 
+
+            try:
+                variant = ProductVariant.objects.get(uuid=variant_uuid)
+            except ProductVariant.DoesNotExist:
+                continue 
+
+            cart_item, _ = CartItem.objects.get_or_create(cart=cart, variant=variant, defaults={'quantity': quantity})
+            if cart_item.quantity != quantity:
+                cart_item.quantity = quantity
+                cart_item.save()
+            updated_variant_uuids.add(variant_uuid)
+
+     
+        CartItem.objects.filter(cart=cart).exclude(variant__uuid__in=updated_variant_uuids).delete()
+
+        try:
+            from .serializers import CartSerializer
+            serializer = CartSerializer(cart)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ImportError:
+            return Response({"success": True, "cart_id": str(cart.uuid)}, status=status.HTTP_200_OK)
+
