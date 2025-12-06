@@ -26,7 +26,7 @@ urlpatterns = [
     path('refresh-token/', TokenRefreshView.as_view(), name='refresh-token_api'),
     path('register-user-address/', RegisterUserAndAddressAPIView.as_view(), name='register-user-address'),
 
-    path("google/", GoogleAuthView.as_view(), name="google-auth"),
+    path("auth/google/", GoogleAuthView.as_view(), name="google-auth"),
 
 
 
