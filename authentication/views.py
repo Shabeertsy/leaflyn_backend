@@ -335,7 +335,7 @@ class RegisterUserAndAddressAPIView(APIView):
 
 class GoogleAuthView(APIView):
     def post(self, request):
-        token = request.data.get("token")
+        token = request.data.get("auth_token")
 
         try:
             google_user = id_token.verify_oauth2_token(
