@@ -16,6 +16,11 @@ from .serializers import (
 )
 from .otp_utils import create_otp, send_otp_email, send_otp_sms, verify_otp, resend_otp
 
+
+from google.oauth2 import id_token
+from google.auth.transport import requests
+
+
 User = get_user_model()
 
 
@@ -324,3 +329,37 @@ class RegisterUserAndAddressAPIView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+
+
+class GoogleAuthView(APIView):
+    def post(self, request):
+        token = request.data.get("token")
+
+        try:
+            google_user = id_token.verify_oauth2_token(
+                token,
+                requests.Request(),
+                settings.GOOGLE_CLIENT_ID
+            )
+
+            email = google_user["email"]
+            name = google_user.get("name", "")
+            
+            user, created = User.objects.get_or_create(
+                username=email,
+                defaults={"email": email, "first_name": name}
+            )
+
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "email": user.email,
+                "name": user.first_name,
+            })
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

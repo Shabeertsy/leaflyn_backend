@@ -260,6 +260,8 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 # TWILIO_AUTH_TOKEN = 'your-auth-token'
 # TWILIO_PHONE_NUMBER = 'your-twilio-phone-number'
 
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+
 
 import ssl
 try:
