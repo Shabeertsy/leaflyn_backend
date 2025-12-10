@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -223,7 +224,25 @@ class AddressUpdateAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
+class SetDefaultAddressAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, uuid):
+        try:
+            address = ShippingAddress.objects.get(uuid=uuid, user=request.user)
+            ShippingAddress.objects.filter(user=request.user, is_default=True).update(is_default=False)
+            address.is_default = True
+            address.save(update_fields=["is_default"])
+            serializer = AddressSerializer(address)
+            return Response({"message": "Default address set successfully.", "address": serializer.data}, status=status.HTTP_200_OK)
+        except ShippingAddress.DoesNotExist:
+            return Response({"error": "Address not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class AddressDeleteAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -501,6 +520,8 @@ class MyOrdersAPIView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+## Notification apis
 class NotificationListAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -537,6 +558,21 @@ class NotificationMarkAsReadAPIView(APIView):
             return Response({"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class NotificationMarkAllAsReadAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            user_profile = request.user
+            notifications = Notification.objects.filter(user=user_profile, is_read=False)
+            count = notifications.update(is_read=True, read_at=timezone.now())
+            return Response({"message": f"{count} notifications marked as read."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 class SyncCartAPIView(APIView):

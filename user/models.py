@@ -60,6 +60,11 @@ class ShippingAddress(BaseModel):
     def __str__(self):
         return f"{self.user.email} - {self.address_line_1}, {self.city}"
 
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            ShippingAddress.objects.filter(user=self.user, is_default=True).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
 
 class Categories(BaseModel):
     category_name = models.CharField(max_length=255, db_index=True, verbose_name="Category Name")

@@ -43,6 +43,7 @@ urlpatterns = [
     path('address-add/', views.AddressAddAPIView.as_view(), name='address-add'),
     path('address-update/<str:uuid>/', views.AddressUpdateAPIView.as_view(), name='address-update'),
     path('address-delete/<str:uuid>/', views.AddressDeleteAPIView.as_view(), name='address-delete'),
+    path('address-set-default/<str:uuid>/', views.SetDefaultAddressAPIView.as_view(), name='address-set-default'),
 
 
 
@@ -74,9 +75,11 @@ urlpatterns = [
 
     path('sync-cart/', views.SyncCartAPIView.as_view(), name='sync-cart'),
 
+
     # Notification 
     path('notifications/', views.NotificationListAPIView.as_view(), name='notification-list'),
     path('notifications/mark-as-read/<int:pk>/', views.NotificationMarkAsReadAPIView.as_view(), name='notification-mark-as-read'),
+    path('notifications/mark-all-as-read/', views.NotificationMarkAllAsReadAPIView.as_view(), name='notification-mark-all-as-read'),
 
 
     path('my-orders/', views.MyOrdersAPIView.as_view(), name='my-orders'),
