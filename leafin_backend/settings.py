@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
     # Custom apps
     'authentication',
+    'accounts',
     'user', 
     'dashboard',
     'payment'
