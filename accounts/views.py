@@ -13,6 +13,25 @@ from rest_framework.pagination import PageNumberPagination
 
 User = get_user_model()
 
+
+class PartnerListAPIView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        partners = User.objects.filter(is_partner=True)
+
+        data = []
+        for partner in partners:
+            full_name = f"{getattr(partner, 'first_name', '')} {getattr(partner, 'last_name', '')}".strip()
+            partner_data = {
+                'id': partner.id,
+                'name': full_name,
+                'email': getattr(partner, 'email', ''),
+            }
+            data.append(partner_data)
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
 class CompanyTransactionListPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
@@ -92,17 +111,20 @@ class CompanyTransactionRetrieveUpdateDestroyAPIView(APIView):
 
 class PersonalTransactionListCreateAPIView(APIView):
 
-    def get(self, request):
-        user_payments = UserPayment.objects.filter(user=request.user)
-        serializer = UserPaymentSerializer(user_payments, many=True)
-        return Response(serializer.data)
-
     def post(self, request, *args, **kwargs):
         serializer = UserPaymentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PersonalTransactions(APIView):
+ 
+    def get(self, request, pk, *args, **kwargs):
+        user_payments = UserPayment.objects.filter(transaction_id=pk)
+        serializer = UserPaymentSerializer(user_payments, many=True)
+        return Response(serializer.data)
 
 
 
