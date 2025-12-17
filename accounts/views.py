@@ -124,7 +124,17 @@ class PersonalTransactions(APIView):
     def get(self, request, pk, *args, **kwargs):
         user_payments = UserPayment.objects.filter(transaction_id=pk)
         serializer = UserPaymentSerializer(user_payments, many=True)
-        return Response(serializer.data)
+
+        try:
+            transaction = CompanyTransaction.objects.get(pk=pk)
+            transaction_details = CompanyTransactionSerializer(transaction).data
+        except CompanyTransaction.DoesNotExist:
+            transaction_details = None
+
+        return Response({
+            'data': serializer.data,
+            'details': transaction_details
+        })
 
 
 
