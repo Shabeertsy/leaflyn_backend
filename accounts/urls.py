@@ -18,6 +18,11 @@ urlpatterns = [
     path('company-transactions/create/', views.CompanyTransactionCreateAPIView.as_view(), name='company-transaction-create'),
     path('company-transactions/<int:pk>/', views.CompanyTransactionRetrieveUpdateDestroyAPIView.as_view(), name='company-transaction-detail'),
 
+    # Split Transaction URLs
+    path('split-transactions/', views.SplitTransactionListAPIView.as_view(), name='split-transaction-list'),
+
+
+
 
     # Personal (User) Payment Transaction URLs
     path('personal-transactions/create/', views.UserPaymentCreateAPIView.as_view(), name='personal-transaction-list-create'),

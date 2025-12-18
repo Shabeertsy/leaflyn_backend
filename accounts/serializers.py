@@ -83,5 +83,34 @@ class UserPaymentSerializer(serializers.ModelSerializer):
             payments_sum = UserPayment.objects.filter(transaction=transaction).aggregate(total=Sum('amount'))['total'] or 0
             return payments_sum >= transaction.amount
 
+
+class SplitTransactionSerializer(serializers.ModelSerializer):
+    person = UserShortSerializer(read_only=True)
+    is_closed = serializers.SerializerMethodField()
+    amount_per_partner = serializers.SerializerMethodField()
+    number_of_partners = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CompanyTransaction
+        fields = [
+            'id', 'transaction_type', 'amount', 'person', 'date_time',
+            'split_amount', 'image', 'notes', 'created_at', 'updated_at', 
+            'is_closed', 'amount_per_partner', 'number_of_partners'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'person', 'is_closed', 'amount_per_partner', 'number_of_partners']
+
+    def get_is_closed(self, obj):
+        payments_sum = UserPayment.objects.filter(transaction=obj).aggregate(total=Sum('amount'))['total'] or 0
+        return payments_sum >= obj.amount
+
+    def get_number_of_partners(self, obj):
+        return User.objects.filter(is_partner=True).count()
+
+    def get_amount_per_partner(self, obj):
+        number_of_partners = self.get_number_of_partners(obj)
+        if number_of_partners > 0:
+            return round(obj.amount / number_of_partners, 2)
+        return 0
+
  
 
