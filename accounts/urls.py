@@ -4,6 +4,15 @@ from . import views
 
 
 urlpatterns = [
+
+    path('login/', views.LoginView.as_view(), name='auth-login'),
+
+
+    # Transaction Request URLs
+    path('transaction-requests/', views.TransactionRequestsListAPIView.as_view(), name='transaction-request-list'),
+    path('transaction-requests/<int:pk>/approve/', views.ApproveTransactionAPIView.as_view(), name='transaction-request-approve'),
+
+
     # Company Transaction URLs
     path('company-transactions/', views.CompanyTransactionListAPIView.as_view(), name='company-transaction-list'),
     path('company-transactions/create/', views.CompanyTransactionCreateAPIView.as_view(), name='company-transaction-create'),
@@ -22,6 +31,7 @@ urlpatterns = [
 
     # Partner Transactions URL
     path('partners/transactions/', views.PartnerTransactionsListAPIView.as_view(), name='partner-transactions-list'),
+    path('company-transactions/partners/', views.CompanyTransactionForPartnersListAPIView.as_view(), name='company-transactions-partners-list'),
 
     ## personal transactions 
     path('personal-transactions/details/<int:partner>/<int:transaction>/', views.PartnerTransactionsInnerPage.as_view(), name='personal-transactions-detail'),

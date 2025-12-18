@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,26 +11,10 @@ from .serializers import CompanyTransactionForPartnerSerializer, CompanyTransact
 from django.contrib.auth import get_user_model
 from rest_framework.pagination import PageNumberPagination
 
+from rest_framework_simplejwt.tokens import RefreshToken
+from authentication.serializers import ProfileSerializer
 
 User = get_user_model()
-
-
-class PartnerListAPIView(APIView):
-
-    def get(self, request, *args, **kwargs):
-        partners = User.objects.filter(is_partner=True)
-
-        data = []
-        for partner in partners:
-            full_name = f"{getattr(partner, 'first_name', '')} {getattr(partner, 'last_name', '')}".strip()
-            partner_data = {
-                'id': partner.id,
-                'name': full_name,
-                'email': getattr(partner, 'email', ''),
-            }
-            data.append(partner_data)
-        return Response(data, status=status.HTTP_200_OK)
-
 
 
 class CompanyTransactionListPagination(PageNumberPagination):
@@ -37,9 +22,109 @@ class CompanyTransactionListPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 
+
+class LoginView(APIView):
+    permission_classes = []
+
+    def post(self, request):
+        identifier = request.data.get('email') or request.data.get('phone_number')
+        password = request.data.get('password')
+
+        if not identifier or not password:
+            return Response(
+                {'error': 'Email/Phone and password are required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Try to find user by email or phone
+        user = None
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+        if re.match(email_pattern, identifier):
+            from django.contrib.auth import authenticate
+            user = authenticate(username=identifier, password=password)
+        else:
+            try:
+                user_obj = User.objects.get(phone_number=identifier)
+                if user_obj.check_password(password):
+                    user = user_obj
+            except User.DoesNotExist:
+                pass
+
+        if user is None or not user.user_type == 'partner' and not user.user_type == 'admin':
+            return Response(
+                {'error': 'Invalid credentials.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': ProfileSerializer(user).data,
+                'is_admin':True if user.is_superuser else False
+            }, status=status.HTTP_200_OK)
+        except Exception:
+            return Response(
+                {'error': 'Token generation failed but credentials are valid.'},
+                status=status.HTTP_200_OK
+            )
+
+
+
+class PartnerListAPIView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        partners = User.objects.filter(user_type='partner')
+        data = []
+        from accounts.models import CompanyTransaction, UserPayment
+
+        total_transaction_amount = 0
+        total_transaction_count = 0
+        partner_stats = {}
+
+        for partner in partners:
+            full_name = f"{getattr(partner, 'first_name', '')} {getattr(partner, 'last_name', '')}".strip()
+            partner_data = {
+                'id': partner.id,
+                'name': full_name,
+                'email': getattr(partner, 'email', ''),
+            }
+
+            # Calculate partner transactions (as CompanyTransaction.person)
+            company_transactions = CompanyTransaction.objects.filter(person=partner, active_status=True, admin_status='approve')
+            transaction_count = company_transactions.count()
+            transaction_amount = company_transactions.aggregate(Sum('amount')).get('amount__sum') or 0
+
+            partner_data['transaction_count'] = transaction_count
+            partner_data['transaction_total_amount'] = float(transaction_amount)
+
+            # Update totals for overall stats
+            total_transaction_count += transaction_count
+            total_transaction_amount += transaction_amount
+
+            data.append(partner_data)
+
+        # Transaction stats for all partners
+        transaction_stats = {
+            'total_transaction_count': total_transaction_count,
+            'total_transaction_amount': float(total_transaction_amount)
+        }
+
+        response_payload = {
+            'partners': data,
+            'transaction_stats': transaction_stats
+        }
+
+        return Response(response_payload, status=status.HTTP_200_OK)
+
+
 class CompanyTransactionListAPIView(APIView):
     def get(self, request, *args, **kwargs):
-        queryset = CompanyTransaction.objects.all()
+        queryset = CompanyTransaction.objects.filter(active_status=True,admin_status='approve')
         month = self.request.query_params.get('month', None)
         year = self.request.query_params.get('year', None)
 
@@ -67,7 +152,7 @@ class CompanyTransactionListAPIView(APIView):
 
 class CompanyTransactionForPartnersListAPIView(APIView):
     def get(self, request, *args, **kwargs):
-        queryset = CompanyTransaction.objects.filter(is_split=True).order_by('-id')
+        queryset = CompanyTransaction.objects.filter(split_amount=True,admin_status='approve').order_by('-id')
         month = self.request.query_params.get('month', None)
         year = self.request.query_params.get('year', None)
 
@@ -93,15 +178,15 @@ class CompanyTransactionForPartnersListAPIView(APIView):
 
 
 
-
-
 class CompanyTransactionCreateAPIView(APIView):
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = CompanyTransactionSerializer(data=request.data)
-        person=get_object_or_404(User,id=request.data.get('person'))
         if serializer.is_valid():
-            serializer.save(person=person)
+            req_status = 'new'
+            if request.user.user_type == 'admin':
+                req_status = 'approve'
+            serializer.save(person=request.user,admin_status=req_status)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -120,20 +205,11 @@ class CompanyTransactionRetrieveUpdateDestroyAPIView(APIView):
         obj = self.get_object(pk)
         data = request.data.copy()
 
-        person_id = data.get('person', None)
-        if person_id is not None:
-            person = get_object_or_404(User, id=person_id)
-            serializer = CompanyTransactionSerializer(obj, data=data, partial=True)
-            if serializer.is_valid():
-                serializer.save(person=person)
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            serializer = CompanyTransactionSerializer(obj, data=data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = CompanyTransactionSerializer(obj, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save(person=request.user)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, *args, **kwargs):
         obj = self.get_object(pk)
@@ -141,26 +217,58 @@ class CompanyTransactionRetrieveUpdateDestroyAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class TransactionRequestsListAPIView(APIView):
+    def get(self, request):
+        queryset = CompanyTransaction.objects.filter(admin_status='new')
+        
+        transaction_type = request.GET.get("transaction_type")
+        if transaction_type:
+            queryset = queryset.filter(transaction_type=transaction_type)
+        
+        month = request.GET.get("month")
+        year = request.GET.get("year")
+        if month and year:
+            try:
+                month = int(month)
+                year = int(year)
+                queryset = queryset.filter(date_time__year=year, date_time__month=month)
+            except ValueError:
+                pass
+
+        serializer = CompanyTransactionSerializer(queryset.order_by('-date_time'), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ApproveTransactionAPIView(APIView):
+   
+    def patch(self, request, pk, *args, **kwargs):
+        obj = get_object_or_404(CompanyTransaction, pk=pk)
+        admin_status = request.data.get('admin_status')
+
+        if admin_status not in ['approve', 'reject']:
+            return Response(
+                {"detail": "Invalid admin_status. Allowed: 'approve', 'reject'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        obj.admin_status = admin_status
+        obj.save(update_fields=['admin_status'])
+        serializer = CompanyTransactionSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
 
 ## User payments
 class UserPaymentCreateAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
-        user_id = request.GET.get('user')
         transaction_id = request.GET.get('transaction')
 
-        if not user_id or not transaction_id:
+        if not transaction_id:
             return Response(
-                {"detail": "Both 'user' and 'transaction' parameters are required."},
+                {"detail": "'transaction' parameters are required."},
                 status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response(
-                {"detail": f"User with id '{user_id}' does not exist."},
-                status=status.HTTP_404_NOT_FOUND
             )
 
         try:
@@ -174,7 +282,7 @@ class UserPaymentCreateAPIView(APIView):
         data = request.data.copy()
         serializer = UserPaymentSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(user=user, transaction=transaction)
+            serializer.save(user=request.user, transaction=transaction)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -201,7 +309,6 @@ class PartnerTransactionsInnerPage(APIView):
 
     def get(self, request, partner, transaction, *args, **kwargs):
         user_payments = UserPayment.objects.filter(user__id=partner, transaction__id=transaction)
-        print(user_payments,'asdfa')
         serializer = UserPaymentSerializer(user_payments, many=True)
         return Response(serializer.data)
 
@@ -238,7 +345,7 @@ class PartnerTransactionsListAPIView(APIView):
         if not partner_id:
             return Response({'error': 'Missing partner parameter.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            partner = User.objects.get(id=partner_id, is_partner=True)
+            partner = User.objects.get(id=partner_id,user_type='partner')
         except User.DoesNotExist:
             return Response({'error': 'Partner does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 

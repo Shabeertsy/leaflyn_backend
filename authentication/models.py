@@ -60,14 +60,13 @@ class Profile(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)  
-    is_partner = models.BooleanField(default=False)  
     deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     user_type = models.CharField(
         max_length=10,
-        choices=[('admin', 'Admin'), ('user', 'User')],
+        choices=[('admin', 'Admin'), ('user', 'User'), ('partner', 'Partner')],
         default='user'
     )
     bio = models.TextField(blank=True)
