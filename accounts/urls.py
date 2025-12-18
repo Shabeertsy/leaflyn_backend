@@ -36,7 +36,6 @@ urlpatterns = [
 
     # Partner Transactions URL
     path('partners/transactions/', views.PartnerTransactionsListAPIView.as_view(), name='partner-transactions-list'),
-    path('company-transactions/partners/', views.CompanyTransactionForPartnersListAPIView.as_view(), name='company-transactions-partners-list'),
 
     ## personal transactions 
     path('personal-transactions/details/<int:partner>/<int:transaction>/', views.PartnerTransactionsInnerPage.as_view(), name='personal-transactions-detail'),

@@ -20,6 +20,12 @@ class CompanyTransaction(BaseModel):
     split_amount = models.BooleanField(default=False, verbose_name="Split Amount")
     image = models.ImageField(upload_to='transaction_images/', blank=True, null=True, verbose_name="Image")
     notes = models.TextField(blank=True, null=True, verbose_name="Notes")
+    ADMIN_STATUS_CHOICES = [
+        ('approve', 'Approve'),
+        ('reject', 'Reject'),
+        ('new', 'New'),
+    ]
+    admin_status = models.CharField(max_length=10,choices=ADMIN_STATUS_CHOICES,default='new',db_index=True, verbose_name="Admin Status")
 
     class Meta:
         verbose_name = "Company Transaction"

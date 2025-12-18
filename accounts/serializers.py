@@ -24,18 +24,46 @@ class UserShortSerializer(serializers.ModelSerializer):
 class CompanyTransactionSerializer(serializers.ModelSerializer):
     person = UserShortSerializer(read_only=True)
     is_closed = serializers.SerializerMethodField()
+    total_split_amount = serializers.SerializerMethodField()
+    total_received_amount = serializers.SerializerMethodField()
+    remaining_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = CompanyTransaction
         fields = [
             'id', 'transaction_type', 'amount', 'person', 'date_time',
-            'split_amount', 'image', 'notes', 'created_at', 'updated_at', 'is_closed'
+            'split_amount', 'image', 'notes', 'created_at', 'updated_at', 'is_closed',
+            'total_split_amount', 'total_received_amount', 'remaining_amount'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'person', 'is_closed']
+        read_only_fields = [
+            'id', 'created_at', 'updated_at', 'person', 'is_closed',
+            'total_split_amount', 'total_received_amount', 'remaining_amount'
+        ]
 
     def get_is_closed(self, obj):
         payments_sum = UserPayment.objects.filter(transaction=obj).aggregate(total=Sum('amount'))['total'] or 0
         return payments_sum >= obj.amount
+        
+    def get_number_of_partners(self, obj):
+        return User.objects.filter(user_type='partner').count()
+
+    def get_total_split_amount(self, obj):
+        if obj.split_amount:
+            number_of_partners = self.get_number_of_partners(obj)
+            if number_of_partners > 0:
+                return round(float(obj.amount) / number_of_partners, 2)
+            return 0.0
+        return 0.0
+
+
+    def get_total_received_amount(self, obj):
+        payments_sum = UserPayment.objects.filter(transaction=obj).aggregate(total=Sum('amount'))['total'] or 0
+        return float(payments_sum)
+
+    def get_remaining_amount(self, obj):
+        payments_sum = UserPayment.objects.filter(transaction=obj).aggregate(total=Sum('amount'))['total'] or 0
+        remaining = float(obj.amount) - float(payments_sum)
+        return max(0, remaining)
 
 
 class CompanyTransactionForPartnerSerializer(serializers.ModelSerializer):
@@ -104,7 +132,7 @@ class SplitTransactionSerializer(serializers.ModelSerializer):
         return payments_sum >= obj.amount
 
     def get_number_of_partners(self, obj):
-        return User.objects.filter(is_partner=True).count()
+        return User.objects.filter(user_type='partner').count()
 
     def get_amount_per_partner(self, obj):
         number_of_partners = self.get_number_of_partners(obj)
