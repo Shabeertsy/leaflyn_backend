@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.generics import ListAPIView
 from datetime import datetime
 from .models import CompanyTransaction, UserPayment
-from .serializers import CompanyTransactionSerializer, UserPaymentSerializer
+from .serializers import CompanyTransactionForPartnerSerializer, CompanyTransactionSerializer, UserPaymentSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.pagination import PageNumberPagination
 
@@ -65,13 +65,43 @@ class CompanyTransactionListAPIView(APIView):
 
 
 
+class CompanyTransactionForPartnersListAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        queryset = CompanyTransaction.objects.filter(is_split=True).order_by('-id')
+        month = self.request.query_params.get('month', None)
+        year = self.request.query_params.get('year', None)
+
+        if month and year:
+            try:
+                month = int(month)
+                year = int(year)
+                queryset = queryset.filter(date_time__year=year, date_time__month=month)
+            except ValueError:
+                pass 
+        elif month:
+            try:
+                month = int(month)
+                year = datetime.now().year
+                queryset = queryset.filter(date_time__year=year, date_time__month=month)
+            except ValueError:
+                pass
+
+        paginator = CompanyTransactionListPagination()
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = CompanyTransactionForPartnerSerializer(paginated_queryset, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+
+
 
 class CompanyTransactionCreateAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
         serializer = CompanyTransactionSerializer(data=request.data)
+        person=get_object_or_404(User,id=request.data.get('person'))
         if serializer.is_valid():
-            serializer.save(person=request.user)
+            serializer.save(person=person)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -86,21 +116,24 @@ class CompanyTransactionRetrieveUpdateDestroyAPIView(APIView):
         serializer = CompanyTransactionSerializer(obj)
         return Response(serializer.data)
 
-    def put(self, request, pk, *args, **kwargs):
-        obj = self.get_object(pk)
-        serializer = CompanyTransactionSerializer(obj, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def patch(self, request, pk, *args, **kwargs):
         obj = self.get_object(pk)
-        serializer = CompanyTransactionSerializer(obj, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.copy()
+
+        person_id = data.get('person', None)
+        if person_id is not None:
+            person = get_object_or_404(User, id=person_id)
+            serializer = CompanyTransactionSerializer(obj, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save(person=person)
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = CompanyTransactionSerializer(obj, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, *args, **kwargs):
         obj = self.get_object(pk)
@@ -109,12 +142,39 @@ class CompanyTransactionRetrieveUpdateDestroyAPIView(APIView):
 
 
 
-class PersonalTransactionListCreateAPIView(APIView):
+## User payments
+class UserPaymentCreateAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
-        serializer = UserPaymentSerializer(data=request.data)
+        user_id = request.GET.get('user')
+        transaction_id = request.GET.get('transaction')
+
+        if not user_id or not transaction_id:
+            return Response(
+                {"detail": "Both 'user' and 'transaction' parameters are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": f"User with id '{user_id}' does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            transaction = CompanyTransaction.objects.get(id=transaction_id)
+        except CompanyTransaction.DoesNotExist:
+            return Response(
+                {"detail": f"CompanyTransaction with id '{transaction_id}' does not exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        data = request.data.copy()
+        serializer = UserPaymentSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            serializer.save(user=user, transaction=transaction)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -137,30 +197,30 @@ class PersonalTransactions(APIView):
         })
 
 
+class PartnerTransactionsInnerPage(APIView):
 
-class PersonalTransactionRetrieveUpdateDestroyAPIView(APIView):
+    def get(self, request, partner, transaction, *args, **kwargs):
+        user_payments = UserPayment.objects.filter(user__id=partner, transaction__id=transaction)
+        print(user_payments,'asdfa')
+        serializer = UserPaymentSerializer(user_payments, many=True)
+        return Response(serializer.data)
+
+
+class UserPaymentRetrieveUpdateDestroyAPIView(APIView):
 
     def get_object(self, pk, user):
-        return get_object_or_404(UserPayment, pk=pk, user=user)
+        return get_object_or_404(UserPayment, pk=pk)
 
     def get(self, request, pk, *args, **kwargs):
         obj = self.get_object(pk, request.user)
         serializer = UserPaymentSerializer(obj)
         return Response(serializer.data)
 
-    def put(self, request, pk, *args, **kwargs):
-        obj = self.get_object(pk, request.user)
-        serializer = UserPaymentSerializer(obj, data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def patch(self, request, pk, *args, **kwargs):
         obj = self.get_object(pk, request.user)
         serializer = UserPaymentSerializer(obj, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -169,3 +229,19 @@ class PersonalTransactionRetrieveUpdateDestroyAPIView(APIView):
         obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+
+
+class PartnerTransactionsListAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        partner_id = request.query_params.get('partner')
+        if not partner_id:
+            return Response({'error': 'Missing partner parameter.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            partner = User.objects.get(id=partner_id, is_partner=True)
+        except User.DoesNotExist:
+            return Response({'error': 'Partner does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+        transactions = UserPayment.objects.filter(user=partner).order_by('-id')
+        serializer = UserPaymentSerializer(transactions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
