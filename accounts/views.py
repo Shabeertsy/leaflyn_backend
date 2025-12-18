@@ -64,21 +64,19 @@ class CompanyTransactionListAPIView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
 
-        transaction = get_object_or_404(CompanyTransaction, pk=pk, split_amount=True)
-        serializer = SplitTransactionSerializer(transaction)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class SplitTransactionListAPIView(APIView):
 
-
-
-class SplitTransactionRetrieveAPIView(APIView):
-    def get(self, request, pk, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         queryset = CompanyTransaction.objects.filter(split_amount=True)
+        
+        # Optional filter by person
+        person_id = request.query_params.get('person', None)
+        if person_id:
+            queryset = queryset.filter(person_id=person_id)
         
         # Optional filter by is_closed status
         is_closed_param = request.query_params.get('is_closed', None)
         if is_closed_param is not None:
-            # We need to filter based on whether payments_sum >= amount
-            # This requires annotation
             from django.db.models import Sum, F, Case, When, BooleanField
             
             queryset = queryset.annotate(
@@ -100,7 +98,6 @@ class SplitTransactionRetrieveAPIView(APIView):
         paginated_queryset = paginator.paginate_queryset(queryset, request)
         serializer = SplitTransactionSerializer(paginated_queryset, many=True)
         return paginator.get_paginated_response(serializer.data)
-
 
 
 

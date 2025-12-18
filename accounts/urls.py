@@ -10,7 +10,8 @@ urlpatterns = [
     path('company-transactions/<int:pk>/', views.CompanyTransactionRetrieveUpdateDestroyAPIView.as_view(), name='company-transaction-detail'),
 
     # Split Transaction URLs
-    path('split-transactions/<int:pk>/', views.SplitTransactionRetrieveAPIView.as_view(), name='split-transaction-detail'),
+    path('split-transactions/', views.SplitTransactionListAPIView.as_view(), name='split-transaction-list'),
+
 
 
 
