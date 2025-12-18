@@ -71,8 +71,8 @@ class SplitTransactionListAPIView(APIView):
         
         # Optional filter by person
         person_id = request.query_params.get('person', None)
-        if person_id:
-            queryset = queryset.filter(person_id=person_id)
+        # if person_id:
+        #     queryset = queryset.filter(person_id=person_id)
         
         # Optional filter by is_closed status
         is_closed_param = request.query_params.get('is_closed', None)
