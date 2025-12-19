@@ -11,6 +11,7 @@ urlpatterns = [
     # Transaction Request URLs
     path('transaction-requests/', views.TransactionRequestsListAPIView.as_view(), name='transaction-request-list'),
     path('transaction-requests/<int:pk>/approve/', views.ApproveTransactionAPIView.as_view(), name='transaction-request-approve'),
+    path('my-requests/', views.MyTransactionRequestsListAPIView.as_view(), name='my-transaction-request-list'),
 
 
     # Company Transaction URLs
@@ -39,4 +40,26 @@ urlpatterns = [
 
     ## personal transactions 
     path('personal-transactions/details/<int:partner>/<int:transaction>/', views.PartnerTransactionsInnerPage.as_view(), name='personal-transactions-detail'),
+
+    # Todo URLs
+    path('todos/', views.TodoListCreateAPIView.as_view(), name='todo-list-create'),
+    path('todos/<int:pk>/', views.TodoRetrieveUpdateDestroyAPIView.as_view(), name='todo-detail'),
+
+
+    ## client 
+    path('clients/', views.ClientListCreateAPIView.as_view(), name='client-list-create'),
+    path('clients/<int:pk>/', views.ClientRetrieveUpdateDestroyAPIView.as_view(), name='client-detail'),
+
+
+    ## service
+    path('services/', views.ServiceListCreateAPIView.as_view(), name='service-list-create'),
+    path('services/<int:pk>/', views.ServiceRetrieveUpdateDestroyAPIView.as_view(), name='service-detail'),
+
+
+    ## service transaction
+    path('service-transactions/', views.ServiceTransactionListCreateAPIView.as_view(), name='service-transaction-list-create'),
+    path('service-transactions/<int:pk>/', views.ServiceTransactionRetrieveUpdateDestroyAPIView.as_view(), name='service-transaction-detail'),
+
+
+
 ]

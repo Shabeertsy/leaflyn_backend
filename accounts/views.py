@@ -6,8 +6,8 @@ from rest_framework import status
 
 from rest_framework.generics import ListAPIView
 from datetime import datetime
-from .models import CompanyTransaction, UserPayment
-from .serializers import CompanyTransactionForPartnerSerializer, CompanyTransactionSerializer, UserPaymentSerializer, SplitTransactionSerializer
+from .models import Client, CompanyTransaction, Service, ServiceTransaction, Todo, UserPayment
+from .serializers import ClientSerializer, CompanyTransactionForPartnerSerializer, CompanyTransactionSerializer, ServiceSerializer, ServiceTransactionSerializer, TodoSerializer, UserPaymentSerializer, SplitTransactionSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.pagination import PageNumberPagination
 
@@ -247,8 +247,30 @@ class TransactionRequestsListAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+
+class MyTransactionRequestsListAPIView(APIView):
+    def get(self, request):
+        queryset = CompanyTransaction.objects.filter(admin_status='new',person=request.user)
+        
+        transaction_type = request.GET.get("transaction_type")
+        if transaction_type:
+            queryset = queryset.filter(transaction_type=transaction_type)
+        
+        month = request.GET.get("month")
+        year = request.GET.get("year")
+        if month and year:
+            try:
+                month = int(month)
+                year = int(year)
+                queryset = queryset.filter(date_time__year=year, date_time__month=month)
+            except ValueError:
+                pass
+
+        serializer = CompanyTransactionSerializer(queryset.order_by('-date_time'), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class ApproveTransactionAPIView(APIView):
-   
     def patch(self, request, pk, *args, **kwargs):
         obj = get_object_or_404(CompanyTransaction, pk=pk)
         admin_status = request.data.get('admin_status')
@@ -360,3 +382,171 @@ class PartnerTransactionsListAPIView(APIView):
         transactions = UserPayment.objects.filter(user=partner).order_by('-id')
         serializer = UserPaymentSerializer(transactions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+## Todo 
+
+# List and Create Todos
+class TodoListCreateAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        todos = Todo.objects.all().order_by('-created_at')
+        serializer = TodoSerializer(todos, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = TodoSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Retrieve, Update, Delete Individual Todo
+class TodoRetrieveUpdateDestroyAPIView(APIView):
+    def get_object(self, pk):
+        return get_object_or_404(Todo, pk=pk)
+
+    def get(self, request, pk, *args, **kwargs):
+        todo = self.get_object(pk)
+        serializer = TodoSerializer(todo)
+        return Response(serializer.data)
+
+    def patch(self, request, pk, *args, **kwargs):
+        todo = self.get_object(pk)
+        serializer = TodoSerializer(todo, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, *args, **kwargs):
+        todo = self.get_object(pk)
+        todo.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+### Client Management
+
+
+# List and Create Clients
+class ClientListCreateAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        clients = Client.objects.all().order_by('-created_at')
+        serializer = ClientSerializer(clients, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ClientSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Retrieve, Update, Delete Individual Client
+class ClientRetrieveUpdateDestroyAPIView(APIView):
+    def get_object(self, pk):
+        return get_object_or_404(Client, pk=pk)
+
+    def get(self, request, pk, *args, **kwargs):
+        client = self.get_object(pk)
+        serializer = ClientSerializer(client)
+        return Response(serializer.data)
+
+    def patch(self, request, pk, *args, **kwargs):
+        client = self.get_object(pk)
+        serializer = ClientSerializer(client, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, *args, **kwargs):
+        client = self.get_object(pk)
+        client.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+## service crud
+
+# List and Create Services
+class ServiceListCreateAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        services = Service.objects.all().order_by('-start_date')
+        serializer = ServiceSerializer(services, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ServiceSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Retrieve, Update, Delete Individual Service
+class ServiceRetrieveUpdateDestroyAPIView(APIView):
+    def get_object(self, pk):
+        return get_object_or_404(Service, pk=pk)
+
+    def get(self, request, pk, *args, **kwargs):
+        service = self.get_object(pk)
+        serializer = ServiceSerializer(service)
+        return Response(serializer.data)
+
+    def patch(self, request, pk, *args, **kwargs):
+        service = self.get_object(pk)
+        serializer = ServiceSerializer(service, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, *args, **kwargs):
+        service = self.get_object(pk)
+        service.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+## transaction billing
+# ServiceTransaction List, Create
+class ServiceTransactionListCreateAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        queryset = ServiceTransaction.objects.all().order_by('-transaction_date')
+        service_id = request.GET.get('service')
+        if service_id:
+            queryset = queryset.filter(service_id=service_id)
+        serializer = ServiceTransactionSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ServiceTransactionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ServiceTransaction Retrieve, Update, Delete
+class ServiceTransactionRetrieveUpdateDestroyAPIView(APIView):
+    def get_object(self, pk):
+        return get_object_or_404(ServiceTransaction, pk=pk)
+
+    def get(self, request, pk, *args, **kwargs):
+        transaction = self.get_object(pk)
+        serializer = ServiceTransactionSerializer(transaction)
+        return Response(serializer.data)
+
+    def patch(self, request, pk, *args, **kwargs):
+        transaction = self.get_object(pk)
+        serializer = ServiceTransactionSerializer(transaction, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, *args, **kwargs):
+        transaction = self.get_object(pk)
+        transaction.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

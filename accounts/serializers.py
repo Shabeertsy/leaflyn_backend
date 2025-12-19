@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CompanyTransaction, UserPayment
+from .models import Client, CompanyTransaction, Service, ServiceTransaction, Todo, UserPayment
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 
@@ -33,7 +33,7 @@ class CompanyTransactionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'transaction_type', 'amount', 'person', 'date_time',
             'split_amount', 'image', 'notes', 'created_at', 'updated_at', 'is_closed',
-            'total_split_amount', 'total_received_amount', 'remaining_amount'
+            'total_split_amount', 'total_received_amount', 'remaining_amount','admin_status'
         ]
         read_only_fields = [
             'id', 'created_at', 'updated_at', 'person', 'is_closed',
@@ -142,3 +142,51 @@ class SplitTransactionSerializer(serializers.ModelSerializer):
 
  
 
+# Serializer for Todo model
+class TodoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Todo
+        fields = ['id', 'title', 'description', 'status', 'due_date', 'priority', 'status','category', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ClientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = ['id', 'name', 'email', 'phone', 'address', 'company_name', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = [
+            'id',
+            'client',
+            'service_name',
+            'description',
+            'start_date',
+            'end_date',
+            'is_active',
+            'amount',
+            'is_closed',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ServiceTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceTransaction
+        fields = [
+            'id',
+            'service',
+            'amount',
+            'status',
+            'notes',
+            'transaction_date',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['id', 'transaction_date', 'created_at', 'updated_at']

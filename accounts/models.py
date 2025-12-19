@@ -71,6 +71,7 @@ class Client(BaseModel):
     phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Phone Number")
     address = models.TextField(blank=True, null=True, verbose_name="Address")
     company_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Company Name")
+    status = models.CharField(max_length=20, blank=True, null=True, verbose_name="Status")
 
     class Meta:
         verbose_name = "Client"
@@ -120,3 +121,27 @@ class ServiceTransaction(BaseModel):
 
     def __str__(self):
         return f"{self.service} - {self.amount} ({self.get_status_display()})"
+
+
+
+class Todo(BaseModel):
+    title = models.CharField(max_length=255, verbose_name="Title")
+    description = models.TextField(blank=True, null=True, verbose_name="Description")
+    status = models.CharField(
+        max_length=10,
+        choices=[('active', 'Active'), ('completed', 'Completed')],
+        default='active',
+        verbose_name="Status"
+    )
+    due_date = models.DateField(blank=True, null=True, verbose_name="Due Date")
+    priority = models.IntegerField(default=0, verbose_name="Priority")
+    category = models.CharField(max_length=100, blank=True, null=True, verbose_name="Category")
+   
+
+    class Meta:
+        verbose_name = "To-Do"
+        verbose_name_plural = "To-Dos"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({'Completed' if self.is_completed else 'Pending'})"
