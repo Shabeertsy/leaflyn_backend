@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-%jo%_(otet%)*#5p+wz3!w^o=_*s3b8fu$u7*$4@x#utt!cgqw
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['13.232.13.14', 'backend.animoraonline.in' , 'www.animoraonline.in','127.0.0.1','backend.animoraonline.in','192.168.1.13','localhost']
+ALLOWED_HOSTS = ['72.62.245.43', 'admin.fernrie.com' , 'fernrie.com','127.0.0.1','localhost']
 
 
 # Application definition
