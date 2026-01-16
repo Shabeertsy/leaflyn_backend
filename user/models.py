@@ -5,6 +5,7 @@ from authentication.models import Profile, BaseModel
 import uuid
 
 
+
 class CompanyContact(BaseModel):
     user = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='company_contact',null=True,blank=True)
     company_name = models.CharField(max_length=255, verbose_name="Company Name")
@@ -514,3 +515,4 @@ class Notification(BaseModel):
             priority=priority,
             order=order,
         )
+

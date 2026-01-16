@@ -72,6 +72,7 @@ class Client(BaseModel):
     address = models.TextField(blank=True, null=True, verbose_name="Address")
     company_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Company Name")
     status = models.CharField(max_length=20, blank=True, null=True, verbose_name="Status")
+    referred_by = models.CharField(max_length=255, blank=True, null=True, verbose_name="Referred By")
 
     class Meta:
         verbose_name = "Client"
