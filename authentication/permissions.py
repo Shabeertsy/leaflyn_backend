@@ -1,5 +1,6 @@
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
+from django.contrib import messages
 
 class UserPermissionMixin:
     """
@@ -9,7 +10,7 @@ class UserPermissionMixin:
     def dispatch(self, request, *args, **kwargs):
         user = request.user
         if not (user.is_authenticated and getattr(user, 'user_type', None) == 'user'):
-            return redirect('loging')
+            return redirect('login')
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -21,6 +22,7 @@ class AdminPermissionMixin:
     def dispatch(self, request, *args, **kwargs):
         user = request.user
         if not (user.is_authenticated and user.is_superuser and getattr(user, 'user_type', None) == 'admin'):
+            messages.error(request, "You do not have permission to access the dashboard. Ensure you are an Admin and Superuser.")
             return redirect('login')
         return super().dispatch(request, *args, **kwargs)
 

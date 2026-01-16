@@ -204,6 +204,15 @@ CORS_ALLOWED_ORIGINS = [
 # Allow credentials (cookies, authorization headers)
 CORS_ALLOW_CREDENTIALS = True
 
+# Avoid CSRF verification failures in production
+CSRF_TRUSTED_ORIGINS = [
+    "https://admin.fernrie.com",
+    "https://fernrie.com",
+    "http://72.62.245.43",
+    "http://localhost",
+    "http://127.0.0.1",
+]
+
 # Allow specific headers
 CORS_ALLOW_HEADERS = [
     'accept',
