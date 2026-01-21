@@ -48,6 +48,9 @@ from rest_framework import status
 
 from user.models import Notification
 from payment.models import PaymentGateway
+from accounts.models import CompanyTransaction, Todo
+from rest_framework.permissions import IsAuthenticated
+from decimal import Decimal
 
 
 ## email imports
@@ -1705,4 +1708,112 @@ class CustomAdDeleteView(View):
         except Exception as e:
             messages.error(request, f"Failed to delete ad: {str(e)}", extra_tags="ads-error")
         return redirect('custom_ads')
+
+
+class DashboardStatsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        today = timezone.now().date()
+        thirty_days_ago = today - timedelta(days=30)
+
+        # 1. Total Revenue (Orders + Services)
+        # Revenue from e-commerce orders
+        order_revenue = Order.objects.exclude(status='cancelled').aggregate(total=models.Sum('total_amount'))['total'] or 0
+        
+        # Revenue from services (accounts app)
+        from accounts.models import Service
+        service_revenue = Service.objects.all().aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        # Combined total revenue
+        total_revenue = order_revenue + service_revenue
+
+        # 2. Clients
+        clients_qs = Profile.objects.filter(user_type='user')
+        clients_count = clients_qs.count()
+        new_clients_count = clients_qs.filter(created_at__gte=thirty_days_ago).count()
+
+        # 3. Partners
+        partners_qs = Profile.objects.filter(user_type='partner')
+        partners_count = partners_qs.count()
+        new_partners_count = partners_qs.filter(created_at__gte=thirty_days_ago).count()
+
+        # 4. Pending Tasks
+        pending_tasks_count = Todo.objects.filter(status='active').count()
+
+        # 5. Income vs Expense (from both CompanyTransaction and ServiceTransaction)
+        company_income = CompanyTransaction.objects.filter(transaction_type='income').aggregate(total=models.Sum('amount'))['total'] or 0
+        company_expense = CompanyTransaction.objects.filter(transaction_type='expense').aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        from accounts.models import ServiceTransaction
+        service_income = ServiceTransaction.objects.filter(transaction_type='income').aggregate(total=models.Sum('amount'))['total'] or 0
+        service_expense = ServiceTransaction.objects.filter(transaction_type='expense').aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        total_income = company_income + service_income
+        total_expense = company_expense + service_expense
+        net_profit = total_income - total_expense
+
+        # 6. Recent Transactions (from both CompanyTransaction and ServiceTransaction)
+        recent_company_transactions = CompanyTransaction.objects.all().order_by('-date_time')[:5]
+        recent_service_transactions = ServiceTransaction.objects.select_related('service').all().order_by('-transaction_date')[:5]
+        
+        transactions_data = []
+        
+        # Add company transactions
+        for t in recent_company_transactions:
+            transactions_data.append({
+                'id': f'company_{t.id}',
+                'type': t.get_transaction_type_display(),
+                'amount': t.amount,
+                'date': t.date_time.strftime('%Y-%m-%d %H:%M'),
+                'notes': t.notes,
+                'image': t.image.url if t.image else None,
+                'source': 'Company Transaction'
+            })
+        
+        # Add service transactions
+        for t in recent_service_transactions:
+            transactions_data.append({
+                'id': f'service_{t.id}',
+                'type': t.get_transaction_type_display(),
+                'amount': t.amount,
+                'date': t.transaction_date.strftime('%Y-%m-%d %H:%M'),
+                'notes': t.notes,
+                'image': None,
+                'source': f'Service: {t.service.service_name}'
+            })
+        
+        # Sort all transactions by date (most recent first)
+        transactions_data.sort(key=lambda x: x['date'], reverse=True)
+        # Keep only the 5 most recent
+        transactions_data = transactions_data[:5]
+
+        data = {
+            "total_revenue": total_revenue,
+            "revenue_breakdown": {
+                "order_revenue": order_revenue,
+                "service_revenue": service_revenue
+            },
+            "clients": {
+                "count": clients_count,
+                "new": new_clients_count
+            },
+            "partners": {
+                "count": partners_count,
+                "new": new_partners_count
+            },
+            "pending_tasks": {
+                "count": pending_tasks_count,
+                "description": f"-{pending_tasks_count} tasks" 
+            },
+            "income_vs_expense": {
+                "net_profit": net_profit,
+                "income": total_income,
+                "expense": total_expense,
+            },
+            "recent_transactions": transactions_data
+        }
+        
+        return Response(data, status=status.HTTP_200_OK)
+
 

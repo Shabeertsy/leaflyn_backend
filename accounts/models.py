@@ -103,6 +103,11 @@ class Service(BaseModel):
 
 
 class ServiceTransaction(BaseModel):
+    TRANSACTION_TYPE_CHOICES = [
+        ('income', 'Income'),
+        ('expense', 'Expense'),
+    ]
+    
     STATUS_CHOICES = [
         ('advance', 'Advance'),
         ('settled', 'Settled'),
@@ -110,10 +115,13 @@ class ServiceTransaction(BaseModel):
     ]
 
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='transactions', verbose_name="Service")
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, db_index=True, verbose_name="Transaction Type")
     amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Amount")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='other', verbose_name="Status")
     notes = models.TextField(blank=True, null=True, verbose_name="Notes")
+    image = models.ImageField(upload_to='service_transaction_images/', blank=True, null=True, verbose_name="Image")
     transaction_date = models.DateTimeField(auto_now_add=True, verbose_name="Transaction Date")
+    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='service_transactions', verbose_name="Added By")
 
     class Meta:
         verbose_name = "Service Transaction"
@@ -121,7 +129,7 @@ class ServiceTransaction(BaseModel):
         ordering = ['-transaction_date']
 
     def __str__(self):
-        return f"{self.service} - {self.amount} ({self.get_status_display()})"
+        return f"{self.get_transaction_type_display()} - {self.service} - {self.amount} ({self.get_status_display()})"
 
 
 

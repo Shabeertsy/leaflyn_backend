@@ -434,7 +434,20 @@ class ClientListCreateAPIView(APIView):
     def get(self, request, *args, **kwargs):
         clients = Client.objects.all().order_by('-created_at')
         serializer = ClientSerializer(clients, many=True)
-        return Response(serializer.data)
+        
+        # Calculate statistics
+        total_clients = clients.count()
+        active_clients = clients.filter(status='active').count() if clients.filter(status__isnull=False).exists() else 0
+        inactive_clients = clients.filter(status='inactive').count() if clients.filter(status__isnull=False).exists() else 0
+        
+        return Response({
+            'clients': serializer.data,
+            'statistics': {
+                'total': total_clients,
+                'active': active_clients,
+                'inactive': inactive_clients
+            }
+        })
 
     def post(self, request, *args, **kwargs):
         serializer = ClientSerializer(data=request.data)
@@ -523,7 +536,7 @@ class ServiceTransactionListCreateAPIView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = ServiceTransactionSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(added_by=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -550,3 +563,102 @@ class ServiceTransactionRetrieveUpdateDestroyAPIView(APIView):
         transaction = self.get_object(pk)
         transaction.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ServiceTransaction by Client
+class ServiceTransactionsByClientAPIView(APIView):
+    def get(self, request, client_id, *args, **kwargs):
+        client = get_object_or_404(Client, pk=client_id)
+        services = Service.objects.filter(client=client)
+        transactions = ServiceTransaction.objects.filter(
+            service__in=services
+        ).order_by('-transaction_date')
+        
+        # Optional filters
+        transaction_type = request.GET.get('transaction_type')
+        if transaction_type:
+            transactions = transactions.filter(transaction_type=transaction_type)
+        
+        status_filter = request.GET.get('status')
+        if status_filter:
+            transactions = transactions.filter(status=status_filter)
+        
+        serializer = ServiceTransactionSerializer(transactions, many=True)
+        
+        # Calculate summary
+        total_income = transactions.filter(transaction_type='income').aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        
+        total_expense = transactions.filter(transaction_type='expense').aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        
+        return Response({
+            'client': {
+                'id': client.id,
+                'name': client.name,
+                'email': client.email
+            },
+            'summary': {
+                'total_transactions': transactions.count(),
+                'total_income': float(total_income),
+                'total_expense': float(total_expense),
+                'net_profit': float(total_income - total_expense)
+            },
+            'transactions': serializer.data
+        }, status=status.HTTP_200_OK)
+
+
+# ServiceTransaction by Service
+class ServiceTransactionsByServiceAPIView(APIView):
+    """
+    Get all transactions for a specific service.
+    """
+    def get(self, request, service_id, *args, **kwargs):
+        # Verify service exists
+        service = get_object_or_404(Service, pk=service_id)
+        
+        # Get all transactions for this service
+        transactions = ServiceTransaction.objects.filter(
+            service=service
+        ).order_by('-transaction_date')
+        
+        # Optional filters
+        transaction_type = request.GET.get('transaction_type')
+        if transaction_type:
+            transactions = transactions.filter(transaction_type=transaction_type)
+        
+        status_filter = request.GET.get('status')
+        if status_filter:
+            transactions = transactions.filter(status=status_filter)
+        
+        serializer = ServiceTransactionSerializer(transactions, many=True)
+        
+        # Calculate summary
+        total_income = transactions.filter(transaction_type='income').aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        
+        total_expense = transactions.filter(transaction_type='expense').aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        
+        return Response({
+            'service': {
+                'id': service.id,
+                'service_name': service.service_name,
+                'client_name': service.client.name,
+                'amount': float(service.amount),
+                'is_active': service.is_active,
+                'is_closed': service.is_closed
+            },
+            'summary': {
+                'total_transactions': transactions.count(),
+                'total_income': float(total_income),
+                'total_expense': float(total_expense),
+                'net_profit': float(total_income - total_expense)
+            },
+            'transactions': serializer.data
+        }, status=status.HTTP_200_OK)
+

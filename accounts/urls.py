@@ -59,7 +59,8 @@ urlpatterns = [
     ## service transaction
     path('service-transactions/', views.ServiceTransactionListCreateAPIView.as_view(), name='service-transaction-list-create'),
     path('service-transactions/<int:pk>/', views.ServiceTransactionRetrieveUpdateDestroyAPIView.as_view(), name='service-transaction-detail'),
-
+    path('clients/<int:client_id>/transactions/', views.ServiceTransactionsByClientAPIView.as_view(), name='service-transactions-by-client'),
+    path('services/<int:service_id>/transactions/', views.ServiceTransactionsByServiceAPIView.as_view(), name='service-transactions-by-service'),
 
 
 ]

@@ -5,6 +5,8 @@ urlpatterns = [
 
     ## Main 
     path('', views.HomeView.as_view(), name='dashboard'),
+    path('api/dashboard-stats/', views.DashboardStatsAPIView.as_view(), name='dashboard_stats_api'),
+
 
 
     ## Authentication

@@ -17,7 +17,8 @@ class UserShortSerializer(serializers.ModelSerializer):
         fields = ['id', 'first_name', 'last_name', 'email', 'person_name']
 
     def get_person_name(self, obj):
-        return f"{obj.first_name} {obj.last_name}".strip()
+        name = f"{obj.first_name} {obj.last_name}".strip()
+        return name if name else obj.email
 
 
 
@@ -151,10 +152,42 @@ class TodoSerializer(serializers.ModelSerializer):
 
 
 class ClientSerializer(serializers.ModelSerializer):
+    income = serializers.SerializerMethodField()
+    profit = serializers.SerializerMethodField()
+    
     class Meta:
         model = Client
-        fields = ['id', 'name', 'email', 'phone', 'address', 'company_name', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'email', 'phone', 'address', 'company_name', 'status', 'income', 'profit', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'income', 'profit']
+    
+    def get_income(self, obj):
+        from django.db.models import Sum
+        services = obj.services.all()
+        total_income = ServiceTransaction.objects.filter(
+            service__in=services,
+            transaction_type='income'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        return float(total_income)
+    
+    def get_profit(self, obj):
+        from django.db.models import Sum
+        
+        services = obj.services.all()
+        total_income = ServiceTransaction.objects.filter(
+            service__in=services,
+            transaction_type='income'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        # Calculate total expense
+        total_expense = ServiceTransaction.objects.filter(
+            service__in=services,
+            transaction_type='expense'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        profit = float(total_income) - float(total_expense)
+        return profit
+
 
 
 class ServiceSerializer(serializers.ModelSerializer):
@@ -171,12 +204,16 @@ class ServiceSerializer(serializers.ModelSerializer):
             'amount',
             'is_closed',
             'created_at',
-            'updated_at'
+            'updated_at',
+        
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
-
 class ServiceTransactionSerializer(serializers.ModelSerializer):
+    service_name = serializers.CharField(source='service.service_name', read_only=True)
+    client_name = serializers.CharField(source='service.client.name', read_only=True)
+    added_by = UserShortSerializer(read_only=True)
+
     class Meta:
         model = ServiceTransaction
         fields = [
@@ -187,6 +224,12 @@ class ServiceTransactionSerializer(serializers.ModelSerializer):
             'notes',
             'transaction_date',
             'created_at',
-            'updated_at'
+            'updated_at',
+            'transaction_type',
+            'service_name',
+            'client_name',
+            'added_by',
+            'image',
         ]
-        read_only_fields = ['id', 'transaction_date', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'transaction_date', 'created_at', 'updated_at', 'service_name', 'client_name', 'added_by']
+
