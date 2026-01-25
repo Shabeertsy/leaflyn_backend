@@ -29,5 +29,8 @@ class JWTAuthMiddleware(BaseMiddleware):
             except (InvalidToken, TokenError) as e:
                 # You might want to log the error here
                 scope["user"] = AnonymousUser()
+        else:
+            scope["user"] = AnonymousUser()
+
         
         return await super().__call__(scope, receive, send)

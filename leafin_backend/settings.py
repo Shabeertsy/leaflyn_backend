@@ -54,9 +54,35 @@ INSTALLED_APPS = [
     'accounts',
     'user', 
     'dashboard',
-    'payment'
-
+    'payment',
+    'fcm_django',
+    'notifications',
 ]
+
+FCM_DJANGO_SETTINGS = {
+    # default: _('FCM Django')
+    "APP_VERBOSE_NAME": "FCM Django",
+     # true: If you want to send in-app notifications
+    "ONE_DEVICE_PER_USER": False,
+     # devices to which notifications cannot be sent,
+    "DELETE_INACTIVE_DEVICES": False,
+}
+
+# Initialize Firebase Admin
+import firebase_admin
+from firebase_admin import credentials
+
+FIREBASE_CREDENTIAL_PATH = os.path.join(BASE_DIR, 'fernriefirebase.json')
+
+if os.path.exists(FIREBASE_CREDENTIAL_PATH):
+    cred = credentials.Certificate(FIREBASE_CREDENTIAL_PATH)
+    try:
+        firebase_admin.get_app()
+    except ValueError:
+        firebase_admin.initialize_app(cred)
+else:
+    print(f"Warning: Firebase credentials file not found at {FIREBASE_CREDENTIAL_PATH}")
+
 
 
 AUTH_USER_MODEL = 'authentication.Profile'

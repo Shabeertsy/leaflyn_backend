@@ -623,3 +623,31 @@ class SyncCartAPIView(APIView):
         except ImportError:
             return Response({"success": True, "cart_id": str(cart.uuid)}, status=status.HTTP_200_OK)
 
+
+class SaveFCMTokenAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        token = request.data.get("token")
+        if not token:
+            return Response({"error": "Token is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            from fcm_django.models import FCMDevice
+            device, created = FCMDevice.objects.get_or_create(
+                registration_id=token, 
+                defaults={
+                    "user": request.user, 
+                    "active": True,
+                    "type": "web" 
+                }
+            )
+
+            if not created:
+                device.user = request.user
+                device.active = True
+                device.save()
+
+            return Response({"status": "ok", "message": "FCM token saved successfully"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

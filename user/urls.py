@@ -80,6 +80,8 @@ urlpatterns = [
     path('notifications/', views.NotificationListAPIView.as_view(), name='notification-list'),
     path('notifications/mark-as-read/<int:pk>/', views.NotificationMarkAsReadAPIView.as_view(), name='notification-mark-as-read'),
     path('notifications/mark-all-as-read/', views.NotificationMarkAllAsReadAPIView.as_view(), name='notification-mark-all-as-read'),
+    path('save-fcm-token/', views.SaveFCMTokenAPIView.as_view(), name='save-fcm-token'),
+
 
 
     path('my-orders/', views.MyOrdersAPIView.as_view(), name='my-orders'),

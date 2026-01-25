@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.generics import ListAPIView
 from datetime import datetime
@@ -76,6 +77,7 @@ class LoginView(APIView):
 
 
 class PartnerListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         partners = User.objects.filter(user_type='partner')
@@ -123,6 +125,7 @@ class PartnerListAPIView(APIView):
 
 
 class CompanyTransactionListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         queryset = CompanyTransaction.objects.filter(active_status=True,admin_status='approve')
         month = self.request.query_params.get('month', None)
@@ -150,6 +153,7 @@ class CompanyTransactionListAPIView(APIView):
 
 
 class SplitTransactionListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         queryset = CompanyTransaction.objects.filter(split_amount=True,admin_status='approve')
@@ -187,6 +191,7 @@ class SplitTransactionListAPIView(APIView):
 
 
 class CompanyTransactionCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = CompanyTransactionSerializer(data=request.data)
@@ -200,6 +205,7 @@ class CompanyTransactionCreateAPIView(APIView):
 
 
 class CompanyTransactionRetrieveUpdateDestroyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get_object(self, pk):
         return get_object_or_404(CompanyTransaction, pk=pk)
@@ -226,6 +232,7 @@ class CompanyTransactionRetrieveUpdateDestroyAPIView(APIView):
 
 
 class TransactionRequestsListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         queryset = CompanyTransaction.objects.filter(admin_status='new')
         
@@ -249,6 +256,7 @@ class TransactionRequestsListAPIView(APIView):
 
 
 class MyTransactionRequestsListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         queryset = CompanyTransaction.objects.filter(admin_status='new',person=request.user)
         
@@ -271,6 +279,7 @@ class MyTransactionRequestsListAPIView(APIView):
 
 
 class ApproveTransactionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def patch(self, request, pk, *args, **kwargs):
         obj = get_object_or_404(CompanyTransaction, pk=pk)
         admin_status = request.data.get('admin_status')
@@ -291,6 +300,7 @@ class ApproveTransactionAPIView(APIView):
 
 ## User payments
 class UserPaymentCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         transaction_id = request.GET.get('transaction')
@@ -318,6 +328,7 @@ class UserPaymentCreateAPIView(APIView):
 
 
 class PersonalTransactions(APIView):
+    permission_classes = [IsAuthenticated]
  
     def get(self, request, pk, *args, **kwargs):
         user_payments = UserPayment.objects.filter(transaction_id=pk)
@@ -336,6 +347,7 @@ class PersonalTransactions(APIView):
 
 
 class PartnerTransactionsInnerPage(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, partner, transaction, *args, **kwargs):
         user_payments = UserPayment.objects.filter(user__id=partner, transaction__id=transaction)
@@ -344,6 +356,7 @@ class PartnerTransactionsInnerPage(APIView):
 
 
 class UserPaymentRetrieveUpdateDestroyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get_object(self, pk, user):
         return get_object_or_404(UserPayment, pk=pk)
@@ -370,6 +383,7 @@ class UserPaymentRetrieveUpdateDestroyAPIView(APIView):
 
 
 class PartnerTransactionsListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         partner_id = request.query_params.get('partner')
         if not partner_id:
@@ -389,6 +403,7 @@ class PartnerTransactionsListAPIView(APIView):
 
 # List and Create Todos
 class TodoListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         todos = Todo.objects.all().order_by('-created_at')
         serializer = TodoSerializer(todos, many=True)
@@ -404,6 +419,7 @@ class TodoListCreateAPIView(APIView):
 
 # Retrieve, Update, Delete Individual Todo
 class TodoRetrieveUpdateDestroyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get_object(self, pk):
         return get_object_or_404(Todo, pk=pk)
 
@@ -431,6 +447,7 @@ class TodoRetrieveUpdateDestroyAPIView(APIView):
 
 # List and Create Clients
 class ClientListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         clients = Client.objects.all().order_by('-created_at')
         serializer = ClientSerializer(clients, many=True)
@@ -459,6 +476,7 @@ class ClientListCreateAPIView(APIView):
 
 # Retrieve, Update, Delete Individual Client
 class ClientRetrieveUpdateDestroyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get_object(self, pk):
         return get_object_or_404(Client, pk=pk)
 
@@ -485,6 +503,7 @@ class ClientRetrieveUpdateDestroyAPIView(APIView):
 
 # List and Create Services
 class ServiceListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         services = Service.objects.all().order_by('-start_date')
         serializer = ServiceSerializer(services, many=True)
@@ -500,6 +519,7 @@ class ServiceListCreateAPIView(APIView):
 
 # Retrieve, Update, Delete Individual Service
 class ServiceRetrieveUpdateDestroyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get_object(self, pk):
         return get_object_or_404(Service, pk=pk)
 
@@ -525,6 +545,7 @@ class ServiceRetrieveUpdateDestroyAPIView(APIView):
 ## transaction billing
 # ServiceTransaction List, Create
 class ServiceTransactionListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         queryset = ServiceTransaction.objects.all().order_by('-transaction_date')
         service_id = request.GET.get('service')
@@ -543,6 +564,7 @@ class ServiceTransactionListCreateAPIView(APIView):
 
 # ServiceTransaction Retrieve, Update, Delete
 class ServiceTransactionRetrieveUpdateDestroyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get_object(self, pk):
         return get_object_or_404(ServiceTransaction, pk=pk)
 
@@ -567,6 +589,7 @@ class ServiceTransactionRetrieveUpdateDestroyAPIView(APIView):
 
 # ServiceTransaction by Client
 class ServiceTransactionsByClientAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, client_id, *args, **kwargs):
         client = get_object_or_404(Client, pk=client_id)
         services = Service.objects.filter(client=client)
@@ -612,6 +635,7 @@ class ServiceTransactionsByClientAPIView(APIView):
 
 # ServiceTransaction by Service
 class ServiceTransactionsByServiceAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     """
     Get all transactions for a specific service.
     """
