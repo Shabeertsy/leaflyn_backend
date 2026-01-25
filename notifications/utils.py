@@ -15,12 +15,16 @@ def send_notification(user_id, message):
             "message": message,
         }
     )
-
 def send_push_notification(users, title, body, data=None, icon=None):
+    print("send_push_notification called")
+    print("Users:", users)
+
     if icon is None:
         icon = "https://admin.fernrie.com/static/assets/img/brand/uploaded_logo.png"
 
     devices = FCMDevice.objects.filter(user__in=users, active=True)
+    print("Devices found:", devices.count())
+
     if not devices.exists():
         print("No active FCM devices found")
         return
@@ -41,8 +45,9 @@ def send_push_notification(users, title, body, data=None, icon=None):
 
         message_obj = Message(data=payload)
 
-        print("Sending FCM push to", devices.count(), "devices")
+        print("Sending FCM push...")
         devices.send_message(message_obj)
+        print("✅ FCM push sent")
 
     except Exception as e:
-        print(f"❌ Error sending FCM: {e}")
+        print(f"Error sending FCM: {e}")
