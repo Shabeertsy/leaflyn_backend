@@ -185,7 +185,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             return Decimal('0.00')
 
     def get_name(self, obj):
-        return  f"{obj.product.name} {obj.variant}"
+        return  f"{obj.product.name} {obj.variant if obj.variant else ''}"
 
 
 class ServiceCategorySerializer(serializers.ModelSerializer):
