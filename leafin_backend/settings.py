@@ -224,7 +224,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React Vite dev server
     "http://127.0.0.1:5173",
     "http://localhost:3000",
-    "http://192.168.1.12:5173"
+    "http://192.168.1.12:5173",
+    "https://leafin-ecommerce.web.app"
 ]
 
 # Allow credentials (cookies, authorization headers)
@@ -237,6 +238,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://72.62.245.43",
     "http://localhost",
     "http://127.0.0.1",
+    "https://leafin-ecommerce.web.app"
 ]
 
 # Allow specific headers
